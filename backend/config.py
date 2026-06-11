@@ -20,8 +20,9 @@ PORT = int(os.getenv("PORT", "8000"))
 # Comma-separated list of origins allowed by CORS, e.g.
 # "https://wc26.pages.dev,https://wc26.example.com". Defaults to the
 # local Vite dev server only — deployments must set it explicitly.
+# Browsers send Origin without a trailing slash, so strip any.
 ALLOWED_ORIGINS = [
-    origin.strip()
+    origin.strip().rstrip("/")
     for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
-    if origin.strip()
+    if origin.strip("/ ")
 ]
