@@ -49,13 +49,16 @@ export default function FixturesPage() {
   const { data, loading, error, retry } = useFetch(getAllMatches)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filters: FixtureFilters = {
-    status: searchParams.get('status') ?? 'all',
-    team: searchParams.get('team') ?? 'all',
-    stage: searchParams.get('stage') ?? 'all',
-    date: searchParams.get('date') ?? '',
-    sort: searchParams.get('sort') ?? 'date-asc',
-  }
+  const filters: FixtureFilters = useMemo(
+    () => ({
+      status: searchParams.get('status') ?? 'all',
+      team: searchParams.get('team') ?? 'all',
+      stage: searchParams.get('stage') ?? 'all',
+      date: searchParams.get('date') ?? '',
+      sort: searchParams.get('sort') ?? 'date-asc',
+    }),
+    [searchParams],
+  )
 
   const hasActiveFilters =
     filters.status !== 'all' || filters.team !== 'all' || filters.stage !== 'all' || !!filters.date
@@ -100,14 +103,7 @@ export default function FixturesPage() {
     return ordered
   }, [data])
 
-  const filtered = useMemo(() => (data ? applyFilters([...data], filters) : []), [
-    data,
-    filters.status,
-    filters.team,
-    filters.stage,
-    filters.date,
-    filters.sort,
-  ])
+  const filtered = useMemo(() => (data ? applyFilters([...data], filters) : []), [data, filters])
 
   /* Group under date headings only for chronological sorts. */
   const groups = useMemo(() => {

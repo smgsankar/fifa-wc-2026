@@ -23,13 +23,17 @@ function toCountdown(targetMs: number): Countdown {
 
 export function useCountdown(targetIso: string): Countdown {
   const targetMs = useMemo(() => new Date(targetIso).getTime(), [targetIso])
-  const [countdown, setCountdown] = useState(() => toCountdown(targetMs))
+  const [state, setState] = useState(() => ({ targetMs, countdown: toCountdown(targetMs) }))
+
+  /* Render-time reset when the target changes — avoids a stale first tick. */
+  if (state.targetMs !== targetMs) {
+    setState({ targetMs, countdown: toCountdown(targetMs) })
+  }
 
   useEffect(() => {
-    setCountdown(toCountdown(targetMs))
-    const id = setInterval(() => setCountdown(toCountdown(targetMs)), 1000)
+    const id = setInterval(() => setState({ targetMs, countdown: toCountdown(targetMs) }), 1000)
     return () => clearInterval(id)
   }, [targetMs])
 
-  return countdown
+  return state.countdown
 }

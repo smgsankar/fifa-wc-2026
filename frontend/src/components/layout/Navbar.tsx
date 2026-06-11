@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `font-display text-sm font-semibold tracking-[0.15em] uppercase transition-colors ${
+  `font-display text-xs font-semibold tracking-[0.15em] uppercase transition-colors sm:text-sm ${
     isActive
       ? 'text-pitch-600 dark:text-pitch-300'
       : 'text-ink/60 hover:text-ink dark:text-stone-100/60 dark:hover:text-stone-100'
@@ -16,11 +16,11 @@ export default function Navbar() {
           <span className="font-display text-2xl leading-none font-black tracking-tight uppercase font-stretch-125%">
             WC26
           </span>
-          <span className="font-display text-xs font-semibold tracking-[0.3em] uppercase text-pitch-600 dark:text-pitch-300">
+          <span className="hidden font-display text-xs font-semibold tracking-[0.3em] uppercase text-pitch-600 sm:inline dark:text-pitch-300">
             Predictor
           </span>
         </Link>
-        <nav className="flex items-center gap-5 sm:gap-7">
+        <nav className="flex items-center gap-4 sm:gap-7">
           <NavLink to="/" end className={linkClass}>
             Home
           </NavLink>
