@@ -1,1 +1,47 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Archivo", ui-sans-serif, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, monospace;
+
+  /* Pitch green — the single accent */
+  --color-pitch-50: #ecf8ef;
+  --color-pitch-100: #d2eeda;
+  --color-pitch-200: #a7ddb8;
+  --color-pitch-300: #74c592;
+  --color-pitch-400: #3fa86a;
+  --color-pitch-500: #19914e;
+  --color-pitch-600: #0e7c3f;
+  --color-pitch-700: #0c6334;
+  --color-pitch-800: #0b4f2b;
+  --color-pitch-900: #094122;
+  --color-pitch-950: #042412;
+
+  /* Editorial surfaces: warm paper / green-tinted night */
+  --color-paper: #faf9f5;
+  --color-ink: #171b18;
+  --color-night: #0c100d;
+  --color-night-soft: #131815;
+
+  /* Match results / prediction verdicts */
+  --color-win: #0e7c3f;
+  --color-draw: #b45309;
+  --color-loss: #c52333;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased dark:bg-night dark:text-stone-100;
+  }
+}
