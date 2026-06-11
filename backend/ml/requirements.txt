@@ -1,0 +1,5 @@
+# ML pipeline deps, kept out of the main requirements.txt: the API never
+# imports these (predictions are pre-computed by ml/train_predict.py).
+# model.pkl is only guaranteed loadable with the same scikit-learn minor version.
+numpy==2.2.*
+scikit-learn==1.7.*
