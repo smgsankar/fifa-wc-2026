@@ -7,7 +7,7 @@ export default function CountdownTimer({ targetIso }: { targetIso: string }) {
 
   if (isPast) {
     return (
-      <p className="font-display text-lg font-black tracking-[0.2em] uppercase text-pitch-600 dark:text-pitch-300">
+      <p className="text-center font-display text-lg font-black tracking-[0.2em] uppercase text-pitch-600 dark:text-pitch-300">
         Kicking off
       </p>
     )
