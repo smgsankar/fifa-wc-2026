@@ -36,7 +36,9 @@ as `teams.logo_url`), and derives `h2h` records (per fixture pair) and
 
 - `squads.csv` — 26-player rosters for all 48 teams, extracted from the
   official FIFA squad-list PDF. Columns:
-  `country_code,team,number,position,name,dob,club`.
+  `country_code,team,number,position,name,dob,club`. Names are
+  given-name-first with the surname in caps as printed by FIFA
+  (`Melvin MASTIL`); mononyms (`ALISSON`) stay as-is.
 
 Regenerate from the PDF (needs `pip install pdfplumber`), then seed
 `teams.squad`:

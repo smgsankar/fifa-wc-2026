@@ -8,6 +8,9 @@ Requires pdfplumber (not part of the server requirements):
 
 Each PDF page holds one team: a "Team Name (CODE)" line followed by a
 26-player table (#, POS, PLAYER NAME, ... DOB, CLUB, ...) and a coach row.
+Names are printed surname-first ("MASTIL Melvin") and reordered to
+given-name-first ("Melvin MASTIL") on the way out.
+
 Output columns: country_code,team,number,position,name,dob,club
 """
 
@@ -28,6 +31,28 @@ def clean(text: str) -> str:
     """The PDF font drops fi/ffi ligatures as NUL bytes; restore them."""
     text = text.replace("She\x00eld", "Sheffield").replace("\x00", "fi")
     return " ".join(text.split())
+
+
+def is_surname_token(token: str) -> bool:
+    """Surnames are printed in caps; 'Mc'/'Mac' prefixes stay mixed (McKENNIE)."""
+    if token == token.upper():
+        return True
+    for prefix in ("Mc", "Mac"):
+        rest = token.removeprefix(prefix)
+        if rest != token and rest and rest == rest.upper():
+            return True
+    return False
+
+
+def reorder_name(display: str) -> str:
+    """'MASTIL Melvin' -> 'Melvin MASTIL'; mononyms ('ALISSON') unchanged."""
+    tokens = display.split()
+    i = 0
+    while i < len(tokens) and is_surname_token(tokens[i]):
+        i += 1
+    if i == 0:
+        raise ValueError(f"No surname prefix in player name {display!r}")
+    return " ".join(tokens[i:] + tokens[:i])
 
 
 def extract_team(page) -> tuple[str, str, list[dict]]:
@@ -55,7 +80,7 @@ def extract_team(page) -> tuple[str, str, list[dict]]:
                 "team": team_name,
                 "number": int(number),
                 "position": position,
-                "name": name,
+                "name": reorder_name(name),
                 "dob": dob,
                 "club": club,
             }
