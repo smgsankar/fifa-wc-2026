@@ -25,7 +25,7 @@ export default function Navbar() {
             Home
           </NavLink>
           <NavLink to="/fixtures" className={linkClass}>
-            Fixtures
+            Schedule
           </NavLink>
           <ThemeToggle />
         </nav>
