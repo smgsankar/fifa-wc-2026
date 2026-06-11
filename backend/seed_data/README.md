@@ -11,6 +11,16 @@ From the "International football results 1872–2025" Kaggle dataset:
 - `former_names.csv` — country renames (`current,former,start_date,end_date`),
   used to normalize old team names while loading history.
 
+## Match schedule (checked in)
+
+- `schedule.csv` — official kickoff times for the 72 group-stage fixtures,
+  from the FIFA match schedule (via the Wikipedia group pages). Columns:
+  `match_no,group,home_team,away_team,kickoff_utc,stadium,city`, where
+  `kickoff_utc` is the UTC kickoff datetime and `match_no` is FIFA's official
+  match number. Teams follow the official listing, which reverses home/away
+  for a few host fixtures relative to `results.csv`; the preseed joins on
+  either orientation.
+
 Preseed everything derived from this dataset:
 
 ```bash

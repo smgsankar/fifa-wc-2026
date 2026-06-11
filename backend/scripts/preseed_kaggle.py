@@ -10,6 +10,14 @@ Kaggle dataset):
                       fixtures; all other rows are completed matches.
   - former_names.csv  current,former,start_date,end_date
 
+Plus the official match schedule (from the FIFA schedule via Wikipedia):
+  - schedule.csv      match_no,group,home_team,away_team,kickoff_utc,
+                      stadium,city
+                      One row per WC2026 fixture with the UTC kickoff
+                      datetime. Teams follow the official listing, which
+                      reverses home/away for a few host fixtures, so the
+                      lookup tries both orientations.
+
 Pipeline (idempotent, safe to re-run):
   1. historical_results  <- completed rows, former team names normalized
   2. teams               <- 48 teams appearing in WC 2026 fixtures, with
@@ -152,8 +160,27 @@ def seed_teams(db, fixtures: list[dict]) -> dict[str, int]:
     return name_to_id
 
 
+def load_kickoffs() -> dict[tuple[str, str], datetime]:
+    """Map (home, away) -> UTC kickoff from schedule.csv, both orientations."""
+    kickoffs = {}
+    for row in load_csv("schedule.csv"):
+        kickoff = datetime.fromisoformat(row["kickoff_utc"]).replace(tzinfo=timezone.utc)
+        kickoffs[(row["home_team"], row["away_team"])] = kickoff
+        kickoffs[(row["away_team"], row["home_team"])] = kickoff
+    return kickoffs
+
+
 def seed_matches(db, fixtures: list[dict], name_to_id: dict[str, int]) -> None:
     """Create the WC2026 fixtures with deterministic match_ids (date order)."""
+    kickoffs = load_kickoffs()
+    missing = [
+        (r["home_team"], r["away_team"])
+        for r in fixtures
+        if (r["home_team"], r["away_team"]) not in kickoffs
+    ]
+    if missing:
+        raise ValueError(f"schedule.csv has no kickoff for fixtures: {missing}")
+
     ordered = sorted(fixtures, key=lambda r: (r["date"], r["home_team"], r["away_team"]))
     created, updated = 0, 0
     for match_id, row in enumerate(ordered, start=1):
@@ -166,7 +193,7 @@ def seed_matches(db, fixtures: list[dict], name_to_id: dict[str, int]) -> None:
             updated += 1
         match.team_a_id = name_to_id[row["home_team"]]
         match.team_b_id = name_to_id[row["away_team"]]
-        match.match_date = datetime.fromisoformat(row["date"]).replace(tzinfo=timezone.utc)
+        match.match_date = kickoffs[(row["home_team"], row["away_team"])]
         match.stage = "group"
     db.commit()
     print(f"matches: {created} created, {updated} updated ({len(ordered)} total)")

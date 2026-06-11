@@ -17,8 +17,9 @@ Train a simple, fast ML model using historical international football matches to
 - `seed_data/results.csv` — Kaggle "International football results" dataset. Completed
   matches from 1872 through 2026-06-10 (the eve of the tournament), **plus** the 72
   World Cup 2026 group-stage fixture rows appended with `home_score`/`away_score` = `NA`
-  (dates 2026-06-11 to 2026-06-27, tournament `FIFA World Cup`). There is no separate
-  schedule file — the fixtures ARE the NA-score rows.
+  (dates 2026-06-11 to 2026-06-27, tournament `FIFA World Cup`). The fixtures ARE
+  the NA-score rows; kickoff times live separately in `seed_data/schedule.csv`,
+  which the model does not need.
 - `seed_data/former_names.csv` — `current,former,start_date,end_date`. Historical team
   names must be normalized to current names within their validity window (e.g.
   Zaïre → DR Congo), exactly as `scripts/preseed_kaggle.py` does, so historical stats
