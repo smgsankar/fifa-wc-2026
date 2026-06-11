@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import type { MatchSummary } from '../../lib/types'
-import { formatKickoff, stageLabel } from '../../lib/format'
+import { formatKickoff, formatVenue, stageLabel } from '../../lib/format'
 import TeamLogo from '../ui/TeamLogo'
 import StatusBadge from '../ui/StatusBadge'
 import ProbabilityBar from './ProbabilityBar'
 import CountdownTimer from './CountdownTimer'
 
 export default function HeroMatchCard({ match }: { match: MatchSummary }) {
+  const venue = formatVenue(match.stadium, match.city)
   return (
     <Link
       to={`/matches/${match.match_id}`}
@@ -53,6 +54,11 @@ export default function HeroMatchCard({ match }: { match: MatchSummary }) {
         <p className="mt-8 text-center text-sm font-medium text-ink/60 dark:text-stone-100/60">
           {formatKickoff(match.match_date)}
         </p>
+        {venue && (
+          <p className="mt-1 text-center text-xs tracking-wide text-ink/40 dark:text-stone-100/40">
+            {venue}
+          </p>
+        )}
 
         <div className="mt-5">
           <CountdownTimer targetIso={match.match_date} />

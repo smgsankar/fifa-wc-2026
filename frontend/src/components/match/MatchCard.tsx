@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import type { MatchSummary } from '../../lib/types'
-import { formatKickoff, stageLabel } from '../../lib/format'
+import { formatKickoff, formatVenue, stageLabel } from '../../lib/format'
 import TeamLogo from '../ui/TeamLogo'
 import ProbabilityBar from './ProbabilityBar'
 
 export default function MatchCard({ match }: { match: MatchSummary }) {
+  const venue = formatVenue(match.stadium, match.city)
   return (
     <Link
       to={`/matches/${match.match_id}`}
@@ -13,6 +14,11 @@ export default function MatchCard({ match }: { match: MatchSummary }) {
       <p className="font-display text-[0.6rem] font-bold tracking-[0.25em] uppercase text-ink/50 dark:text-stone-100/50">
         {stageLabel(match.stage)} · {formatKickoff(match.match_date)}
       </p>
+      {venue && (
+        <p className="mt-1 truncate text-[0.65rem] tracking-wide text-ink/40 dark:text-stone-100/40">
+          {venue}
+        </p>
+      )}
 
       <div className="mt-4 space-y-3">
         {[match.team_a, match.team_b].map((team) => (

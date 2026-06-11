@@ -1,5 +1,5 @@
 import type { MatchDetail } from '../../lib/types'
-import { formatKickoff, stageLabel } from '../../lib/format'
+import { formatKickoff, formatVenue, stageLabel } from '../../lib/format'
 import TeamLogo from '../ui/TeamLogo'
 import StatusBadge from '../ui/StatusBadge'
 import CountdownTimer from '../match/CountdownTimer'
@@ -7,6 +7,7 @@ import CountdownTimer from '../match/CountdownTimer'
 export default function MatchHeader({ match }: { match: MatchDetail }) {
   const completed = match.status === 'completed'
   const hasScore = match.actual_score_a !== null && match.actual_score_b !== null
+  const venue = formatVenue(match.stadium, match.city)
 
   return (
     <div className="border-2 border-ink bg-white dark:border-stone-100/80 dark:bg-night-soft">
@@ -15,9 +16,16 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
           {stageLabel(match.stage)} · Match {match.match_id}
         </p>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-ink/60 dark:text-stone-100/60">
-            {formatKickoff(match.match_date)}
-          </span>
+          <div className="text-right">
+            <p className="text-xs text-ink/60 dark:text-stone-100/60">
+              {formatKickoff(match.match_date)}
+            </p>
+            {venue && (
+              <p className="mt-0.5 text-[0.65rem] tracking-wide text-ink/40 dark:text-stone-100/40">
+                {venue}
+              </p>
+            )}
+          </div>
           <StatusBadge status={match.status} />
         </div>
       </div>

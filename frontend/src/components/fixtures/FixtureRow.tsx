@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { MatchListItem, Team } from '../../lib/types'
-import { formatPercent, formatTime, stageLabel } from '../../lib/format'
+import { formatPercent, formatTime, formatVenue, stageLabel } from '../../lib/format'
 import TeamLogo from '../ui/TeamLogo'
 import StatusBadge from '../ui/StatusBadge'
 import CorrectBadge from '../ui/CorrectBadge'
@@ -31,6 +31,7 @@ export default function FixtureRow({ match }: { match: MatchListItem }) {
   const completed = match.status === 'completed'
   const hasScore = match.actual_score_a !== null && match.actual_score_b !== null
   const favorite = predictedFavorite(match)
+  const venue = formatVenue(match.stadium, match.city)
 
   return (
     <Link
@@ -44,16 +45,23 @@ export default function FixtureRow({ match }: { match: MatchListItem }) {
         </p>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <TeamSide team={match.team_a} align="right" />
-        {completed && hasScore ? (
-          <span className="shrink-0 font-mono text-base font-bold tabular-nums">
-            {match.actual_score_a}–{match.actual_score_b}
-          </span>
-        ) : (
-          <span className="shrink-0 text-xs text-ink/30 dark:text-stone-100/30">v</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-3">
+          <TeamSide team={match.team_a} align="right" />
+          {completed && hasScore ? (
+            <span className="shrink-0 font-mono text-base font-bold tabular-nums">
+              {match.actual_score_a}–{match.actual_score_b}
+            </span>
+          ) : (
+            <span className="shrink-0 text-xs text-ink/30 dark:text-stone-100/30">v</span>
+          )}
+          <TeamSide team={match.team_b} align="left" />
+        </div>
+        {venue && (
+          <p className="mt-1 truncate text-center text-[0.65rem] tracking-wide text-ink/40 dark:text-stone-100/40">
+            {venue}
+          </p>
         )}
-        <TeamSide team={match.team_b} align="left" />
       </div>
 
       <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">

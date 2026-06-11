@@ -50,6 +50,12 @@ export function dayKey(iso: string): string {
   return `${d.getFullYear()}-${month}-${day}`
 }
 
+export function formatVenue(stadium: string | null, city: string | null): string | null {
+  if (!stadium && !city) return null
+  if (stadium && city) return `${stadium}, ${city}`
+  return stadium ?? city
+}
+
 export function formatPercent(p: number): string {
   return `${Math.round(p * 100)}%`
 }

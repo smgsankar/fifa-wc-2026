@@ -54,6 +54,8 @@ export interface MatchSummary {
   team_a: Team
   team_b: Team
   match_date: string
+  stadium: string | null
+  city: string | null
   stage: string
   status: MatchStatus
   prediction: Prediction | null
