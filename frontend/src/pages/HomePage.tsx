@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { getModelStats, getNext4 } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import HeroMatchCard from '../components/match/HeroMatchCard'
@@ -41,6 +42,14 @@ export default function HomePage() {
                   {matches.data.slice(1, 4).map((m) => (
                     <MatchCard key={m.match_id} match={m} />
                   ))}
+                </div>
+                <div className="mt-8 flex justify-center">
+                  <Link
+                    to="/fixtures"
+                    className="border-2 border-ink px-5 py-2 font-display text-xs font-bold tracking-[0.2em] uppercase transition-colors hover:bg-ink hover:text-paper dark:border-stone-100 dark:hover:bg-stone-300 dark:hover:text-night"
+                  >
+                    View schedule
+                  </Link>
                 </div>
               </div>
             )}
