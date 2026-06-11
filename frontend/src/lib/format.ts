@@ -6,7 +6,6 @@ const kickoffFmt = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
-  timeZoneName: 'short',
 })
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
