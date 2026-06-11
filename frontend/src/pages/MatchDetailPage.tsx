@@ -7,6 +7,7 @@ import PredictionPanel from '../components/detail/PredictionPanel'
 import RecentFormList from '../components/detail/RecentFormList'
 import H2HPanel from '../components/detail/H2HPanel'
 import SquadTable from '../components/detail/SquadTable'
+import TeamTabbedPanels from '../components/detail/TeamTabbedPanels'
 import SectionHeading from '../components/ui/SectionHeading'
 import ErrorState from '../components/ui/ErrorState'
 import EmptyState from '../components/ui/EmptyState'
@@ -64,18 +65,16 @@ export default function MatchDetailPage() {
 
       <section>
         <SectionHeading kicker="Last five matches" title="Recent Form" />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <RecentFormList team={match.team_a} />
-          <RecentFormList team={match.team_b} />
-        </div>
+        <TeamTabbedPanels teamA={match.team_a} teamB={match.team_b}>
+          {(team) => <RecentFormList team={team} />}
+        </TeamTabbedPanels>
       </section>
 
       <section>
         <SectionHeading kicker="The rosters" title="Squads" />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <SquadTable team={match.team_a} />
-          <SquadTable team={match.team_b} />
-        </div>
+        <TeamTabbedPanels teamA={match.team_a} teamB={match.team_b}>
+          {(team) => <SquadTable team={team} />}
+        </TeamTabbedPanels>
       </section>
     </div>
   )
