@@ -1,29 +1,38 @@
 import type { ModelStats } from '../../lib/types'
 import { formatDate, formatPercent } from '../../lib/format'
 
-function BigStat({ label, value }: { label: string; value: number }) {
+function BigStat({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="border border-ink/20 bg-white p-5 dark:border-stone-100/20 dark:bg-night-soft">
       <p className="font-display text-[0.65rem] font-bold tracking-[0.25em] uppercase text-ink/50 dark:text-stone-100/50">
         {label}
       </p>
-      <p className="mt-2 font-mono text-4xl font-bold tabular-nums sm:text-5xl">
-        {formatPercent(value)}
+      <p
+        className={`mt-2 font-mono text-4xl font-bold tabular-nums sm:text-5xl ${
+          value === null ? 'text-ink/30 dark:text-stone-100/30' : ''
+        }`}
+      >
+        {value === null ? 'N/A' : formatPercent(value)}
       </p>
       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-ink/10 dark:bg-stone-100/10">
-        <div className="h-full bg-pitch-600 dark:bg-pitch-400" style={{ width: `${value * 100}%` }} />
+        <div
+          className="h-full bg-pitch-600 dark:bg-pitch-400"
+          style={{ width: `${(value ?? 0) * 100}%` }}
+        />
       </div>
     </div>
   )
 }
 
 export default function ModelStatsSection({ stats }: { stats: ModelStats }) {
+  /* Until a match has been scored, the rate metrics are meaningless. */
+  const scored = stats.correct_predictions + stats.incorrect_predictions > 0
   return (
     <div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <BigStat label="Accuracy" value={stats.accuracy} />
-        <BigStat label="Precision" value={stats.precision} />
-        <BigStat label="Recall" value={stats.recall} />
+        <BigStat label="Accuracy" value={scored ? stats.accuracy : null} />
+        <BigStat label="Precision" value={scored ? stats.precision : null} />
+        <BigStat label="Recall" value={scored ? stats.recall : null} />
       </div>
 
       <div className="mt-4 grid grid-cols-3 divide-x divide-ink/15 border border-ink/20 bg-white dark:divide-stone-100/15 dark:border-stone-100/20 dark:bg-night-soft">
