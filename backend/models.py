@@ -47,6 +47,8 @@ class Match(TimestampMixin, Base):
     team_a_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     team_b_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     match_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    stadium: Mapped[str | None] = mapped_column(String, nullable=True)
+    city: Mapped[str | None] = mapped_column(String, nullable=True)
     stage: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     actual_score_a: Mapped[int | None] = mapped_column(Integer, nullable=True)

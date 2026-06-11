@@ -66,6 +66,8 @@ class MatchBase(BaseModel):
 
     match_id: int
     match_date: datetime
+    stadium: str | None = None
+    city: str | None = None
     stage: str
     status: str
     prediction: PredictionOut | None = None

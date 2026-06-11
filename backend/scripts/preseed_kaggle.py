@@ -160,23 +160,27 @@ def seed_teams(db, fixtures: list[dict]) -> dict[str, int]:
     return name_to_id
 
 
-def load_kickoffs() -> dict[tuple[str, str], datetime]:
-    """Map (home, away) -> UTC kickoff from schedule.csv, both orientations."""
-    kickoffs = {}
+def load_schedule() -> dict[tuple[str, str], dict]:
+    """Map (home, away) -> kickoff/venue from schedule.csv, both orientations."""
+    schedule = {}
     for row in load_csv("schedule.csv"):
-        kickoff = datetime.fromisoformat(row["kickoff_utc"]).replace(tzinfo=timezone.utc)
-        kickoffs[(row["home_team"], row["away_team"])] = kickoff
-        kickoffs[(row["away_team"], row["home_team"])] = kickoff
-    return kickoffs
+        entry = {
+            "kickoff": datetime.fromisoformat(row["kickoff_utc"]).replace(tzinfo=timezone.utc),
+            "stadium": row["stadium"],
+            "city": row["city"],
+        }
+        schedule[(row["home_team"], row["away_team"])] = entry
+        schedule[(row["away_team"], row["home_team"])] = entry
+    return schedule
 
 
 def seed_matches(db, fixtures: list[dict], name_to_id: dict[str, int]) -> None:
     """Create the WC2026 fixtures with deterministic match_ids (date order)."""
-    kickoffs = load_kickoffs()
+    schedule = load_schedule()
     missing = [
         (r["home_team"], r["away_team"])
         for r in fixtures
-        if (r["home_team"], r["away_team"]) not in kickoffs
+        if (r["home_team"], r["away_team"]) not in schedule
     ]
     if missing:
         raise ValueError(f"schedule.csv has no kickoff for fixtures: {missing}")
@@ -193,7 +197,10 @@ def seed_matches(db, fixtures: list[dict], name_to_id: dict[str, int]) -> None:
             updated += 1
         match.team_a_id = name_to_id[row["home_team"]]
         match.team_b_id = name_to_id[row["away_team"]]
-        match.match_date = kickoffs[(row["home_team"], row["away_team"])]
+        entry = schedule[(row["home_team"], row["away_team"])]
+        match.match_date = entry["kickoff"]
+        match.stadium = entry["stadium"]
+        match.city = entry["city"]
         match.stage = "group"
     db.commit()
     print(f"matches: {created} created, {updated} updated ({len(ordered)} total)")
