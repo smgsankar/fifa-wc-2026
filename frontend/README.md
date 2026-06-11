@@ -81,3 +81,8 @@ Create a Pages project from this repo with:
 | Environment variable | `VITE_API_BASE_URL=https://<your-backend>.railway.app` (Production **and** Preview) |
 
 `public/_redirects` (`/* /index.html 200`) is copied into `dist/` so SPA deep links like `/matches/12` survive refresh. Remember: changing the backend URL requires a redeploy since the env var is build-time.
+
+Two gotchas:
+
+- **CORS**: the backend only accepts requests from origins listed in its `ALLOWED_ORIGINS` env var — add the Pages origin (e.g. `https://<project>.pages.dev`, no trailing slash) on the backend deployment, or every API call fails in the browser.
+- **Build watch paths**: if the Pages project restricts builds with watch paths, make sure they cover all of `frontend/**` (not just `frontend/src/**`), otherwise changes to `public/` assets like favicons won't trigger a deployment.

@@ -27,23 +27,41 @@ http://localhost:8000/docs.
 
 ## Seed the database
 
-Place the data files in `seed_data/` (see `seed_data/README.md` for the
-expected formats), then:
+The data files are checked in under `seed_data/` (see `seed_data/README.md`
+for sources and formats). Run the loaders in order, from the `backend/`
+directory:
 
 ```bash
-python scripts/seed.py
+python scripts/preseed_kaggle.py    # history, teams, fixtures, h2h, recent form
+python scripts/seed_squads.py       # squads + head coaches
+python scripts/seed_predictions.py  # model predictions for all 72 fixtures
 ```
 
-Loaders are idempotent — re-run safely after fixing a data file. Individual
-loaders can also be run standalone (`python scripts/seed_teams.py`, etc.).
+All loaders are idempotent — re-run safely after fixing a data file.
 
-Once match results start coming in (scores recorded on `matches` rows with
-status set to `completed`), refresh prediction correctness and model stats
-with:
+Two supporting scripts regenerate the seed files themselves (not needed
+unless the source data changes):
+
+- `scripts/extract_squads.py <pdf>` — extracts `squads.csv` / `coaches.csv`
+  from the official FIFA squad-list PDF (needs `pip install pdfplumber`).
+- `ml/train_predict.py` — trains the prediction model and writes
+  `seed_data/predictions.json` (needs `pip install -r ml/requirements.txt`).
+  See `mlprd.md` for the model spec.
+
+## Record results during the tournament
 
 ```bash
-python scripts/recompute_stats.py
+python scripts/record_results.py
 ```
+
+Interactively lists matches that have kicked off but have no result yet,
+prompts for final scores, and marks them completed. Prediction correctness
+and global model stats are recomputed automatically at the end of the
+session. It works against whatever `DATABASE_URL` points at, so the same
+script records results in production.
+
+To recompute stats without recording anything (e.g. after editing scores
+directly in the database), run `python scripts/recompute_stats.py`.
 
 ## API endpoints
 
@@ -72,6 +90,7 @@ Full request/response shapes are documented in `prd.md` and live at `/docs`.
 |---|---|---|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/wc2026` |
 | `PORT` | Server port | `8000` |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins, no trailing slashes (e.g. `https://wc26.pages.dev`) | `http://localhost:5173` |
 
 ## Deploy to Railway
 
@@ -80,13 +99,17 @@ Full request/response shapes are documented in `prd.md` and live at `/docs`.
 3. Add a service from this repo, with the root directory set to `backend/`.
    The `Procfile` provides the start command.
 4. On the API service, set `DATABASE_URL` to the Postgres service reference
-   (`${{Postgres.DATABASE_URL}}`). Railway sets `PORT` automatically.
+   (`${{Postgres.DATABASE_URL}}`) and `ALLOWED_ORIGINS` to the deployed
+   frontend origin(s). Railway sets `PORT` automatically.
 5. Deploy, then generate a public domain for the API service.
 
-Seed the production database from your machine:
+Seed the production database from your machine by pointing the loaders at
+the Railway Postgres:
 
 ```bash
-DATABASE_URL="<railway-postgres-public-url>" python scripts/seed.py
+DATABASE_URL="<railway-postgres-public-url>" python scripts/preseed_kaggle.py
+DATABASE_URL="<railway-postgres-public-url>" python scripts/seed_squads.py
+DATABASE_URL="<railway-postgres-public-url>" python scripts/seed_predictions.py
 # or, with the Railway CLI linked to the project:
-railway run python scripts/seed.py
+railway run python scripts/preseed_kaggle.py   # etc.
 ```
