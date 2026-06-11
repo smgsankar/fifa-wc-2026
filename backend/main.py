@@ -139,6 +139,8 @@ def get_all_matches(
                 team_a=schemas.TeamSummary.model_validate(m.team_a),
                 team_b=schemas.TeamSummary.model_validate(m.team_b),
                 match_date=m.match_date,
+                stadium=m.stadium,
+                city=m.city,
                 stage=m.stage,
                 status=m.status,
                 actual_score_a=m.actual_score_a,
@@ -174,6 +176,8 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
         team_b=team_detail(match.team_b),
         h2h=get_h2h(db, match.team_a_id, match.team_b_id),
         match_date=match.match_date,
+        stadium=match.stadium,
+        city=match.city,
         stage=match.stage,
         status=match.status,
         actual_score_a=match.actual_score_a,
@@ -200,11 +204,18 @@ def get_model_stats(db: Session = Depends(get_db)):
                 last_updated=datetime.now(timezone.utc),
             )
         }
+    # Only scored predictions (completed matches) count as incorrect;
+    # pending matches have is_correct = NULL.
+    incorrect = (
+        db.query(models.Prediction)
+        .filter(models.Prediction.is_correct.is_(False))
+        .count()
+    )
     return {
         "stats": schemas.StatsOut(
             total_predictions=stats.total_predictions,
             correct_predictions=stats.correct_predictions,
-            incorrect_predictions=stats.total_predictions - stats.correct_predictions,
+            incorrect_predictions=incorrect,
             accuracy=stats.accuracy,
             precision=stats.precision,
             recall=stats.recall,
