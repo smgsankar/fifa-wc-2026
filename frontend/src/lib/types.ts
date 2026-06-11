@@ -22,6 +22,7 @@ export interface FormEntry {
 }
 
 export interface TeamDetail extends Team {
+  head_coach: string | null
   squad: SquadPlayer[]
   recent_form: FormEntry[]
 }

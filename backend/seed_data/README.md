@@ -39,9 +39,11 @@ as `teams.logo_url`), and derives `h2h` records (per fixture pair) and
   `country_code,team,number,position,name,dob,club`. Names are
   given-name-first with the surname in caps as printed by FIFA
   (`Melvin MASTIL`); mononyms (`ALISSON`) stay as-is.
+- `coaches.csv` — head coach per team, same name format. Columns:
+  `country_code,team,name`.
 
 Regenerate from the PDF (needs `pip install pdfplumber`), then seed
-`teams.squad`:
+`teams.squad` and `teams.head_coach`:
 
 ```bash
 python scripts/extract_squads.py ~/Downloads/SquadLists-English.pdf

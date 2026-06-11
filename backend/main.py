@@ -163,6 +163,7 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
             name=team.name,
             country_code=team.country_code,
             logo_url=team.logo_url,
+            head_coach=team.head_coach,
             squad=team.squad or [],
             recent_form=team.recent_form or [],
         )

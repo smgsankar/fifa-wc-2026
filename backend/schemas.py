@@ -34,6 +34,7 @@ class FormEntry(BaseModel):
 
 
 class TeamDetail(TeamSummary):
+    head_coach: str | None = None
     squad: list[SquadPlayer] = []
     recent_form: list[FormEntry] = []
 

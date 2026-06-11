@@ -34,6 +34,7 @@ class Team(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     country_code: Mapped[str] = mapped_column(String, nullable=False)
     logo_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    head_coach: Mapped[str | None] = mapped_column(String, nullable=True)
     squad: Mapped[list | None] = mapped_column(JSON, nullable=True, default=list)
     recent_form: Mapped[list | None] = mapped_column(JSON, nullable=True, default=list)
 

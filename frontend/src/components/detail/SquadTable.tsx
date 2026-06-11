@@ -30,6 +30,17 @@ export default function SquadTable({ team }: { team: TeamDetail }) {
       <p className="border-b border-ink/15 px-4 py-3 font-display text-sm font-bold tracking-wide uppercase dark:border-stone-100/15">
         {team.name}
       </p>
+      {team.head_coach && (
+        <div>
+          <p className="bg-ink/5 px-4 py-1.5 font-display text-[0.6rem] font-bold tracking-[0.25em] uppercase text-ink/50 dark:bg-stone-100/5 dark:text-stone-100/50">
+            Head coach
+          </p>
+          <p className="flex items-center gap-3 px-4 py-2">
+            <span className="w-7" aria-hidden="true" />
+            <span className="text-sm font-medium">{team.head_coach}</span>
+          </p>
+        </div>
+      )}
       {groups.length === 0 ? (
         <p className="px-4 py-6 text-sm text-ink/50 dark:text-stone-100/50">Squad unavailable.</p>
       ) : (
