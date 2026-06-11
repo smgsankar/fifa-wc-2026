@@ -21,7 +21,7 @@ export default function HeroMatchCard({ match }: { match: MatchSummary }) {
       </div>
 
       <div className="px-5 py-8 sm:px-8 sm:py-10">
-        <div className="flex items-center justify-between gap-4 sm:gap-8">
+        <div className="flex items-start justify-between gap-4 sm:gap-8">
           <div className="flex flex-1 flex-col items-center gap-3 text-center">
             <TeamLogo team={match.team_a} className="size-16 sm:size-24" fallbackTextClass="text-lg sm:text-2xl" />
             <div>
@@ -34,7 +34,7 @@ export default function HeroMatchCard({ match }: { match: MatchSummary }) {
             </div>
           </div>
 
-          <p className="font-display text-sm font-black tracking-[0.3em] uppercase text-ink/30 dark:text-stone-100/30">
+          <p className="flex h-16 items-center font-display text-sm font-black tracking-[0.3em] uppercase text-ink/30 sm:h-24 dark:text-stone-100/30">
             VS
           </p>
 
