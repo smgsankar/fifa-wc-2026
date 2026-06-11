@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -56,14 +56,42 @@ def match_query(db: Session):
     )
 
 
-def upcoming_matches(db: Session, limit: int) -> list[models.Match]:
-    return (
+# A match is considered live from kickoff until this long after; past the
+# window it is "awaiting_results" until actual scores are uploaded.
+LIVE_WINDOW = timedelta(minutes=100)
+
+
+def effective_status(match: models.Match, now: datetime) -> str:
+    """Derive the displayed status from the stored one and the clock."""
+    if match.status == "completed":
+        return "completed"
+    kickoff = match.match_date
+    if kickoff.tzinfo is None:
+        kickoff = kickoff.replace(tzinfo=timezone.utc)
+    if now < kickoff:
+        return "pending"
+    if now < kickoff + LIVE_WINDOW:
+        return "live"
+    return "awaiting_results"
+
+
+def upcoming_matches(db: Session, limit: int) -> list[schemas.UpcomingMatch]:
+    """Next matches in kickoff order, starting with a live one if ongoing."""
+    now = datetime.now(timezone.utc)
+    matches = (
         match_query(db)
         .filter(models.Match.status == "pending")
+        .filter(models.Match.match_date > now - LIVE_WINDOW)
         .order_by(models.Match.match_date.asc(), models.Match.match_id.asc())
         .limit(limit)
         .all()
     )
+    return [
+        schemas.UpcomingMatch.model_validate(m).model_copy(
+            update={"status": effective_status(m, now)}
+        )
+        for m in matches
+    ]
 
 
 def get_h2h(db: Session, team_a_id: int, team_b_id: int) -> schemas.H2HOut | None:
@@ -113,7 +141,9 @@ def get_next_4_matches(db: Session = Depends(get_db)):
 
 @app.get("/api/matches/all", response_model=schemas.AllMatchesResponse)
 def get_all_matches(
-    status: Literal["pending", "completed", "live"] | None = Query(default=None),
+    status: Literal["pending", "live", "awaiting_results", "completed"] | None = Query(
+        default=None
+    ),
     team_id: int | None = Query(default=None),
     stage: Literal["group", "round16", "quarterfinal", "semifinal", "final"] | None = Query(
         default=None
@@ -121,8 +151,6 @@ def get_all_matches(
     db: Session = Depends(get_db),
 ):
     query = match_query(db)
-    if status is not None:
-        query = query.filter(models.Match.status == status)
     if team_id is not None:
         query = query.filter(
             or_(models.Match.team_a_id == team_id, models.Match.team_b_id == team_id)
@@ -132,25 +160,29 @@ def get_all_matches(
     matches = query.order_by(
         models.Match.match_date.asc(), models.Match.match_id.asc()
     ).all()
-    return {
-        "all_matches": [
-            schemas.MatchListItem(
-                match_id=m.match_id,
-                team_a=schemas.TeamSummary.model_validate(m.team_a),
-                team_b=schemas.TeamSummary.model_validate(m.team_b),
-                match_date=m.match_date,
-                stadium=m.stadium,
-                city=m.city,
-                stage=m.stage,
-                status=m.status,
-                actual_score_a=m.actual_score_a,
-                actual_score_b=m.actual_score_b,
-                prediction=m.prediction,
-                prediction_correct=m.prediction.is_correct if m.prediction else None,
-            )
-            for m in matches
-        ]
-    }
+    now = datetime.now(timezone.utc)
+    items = [
+        schemas.MatchListItem(
+            match_id=m.match_id,
+            team_a=schemas.TeamSummary.model_validate(m.team_a),
+            team_b=schemas.TeamSummary.model_validate(m.team_b),
+            match_date=m.match_date,
+            stadium=m.stadium,
+            city=m.city,
+            stage=m.stage,
+            status=effective_status(m, now),
+            actual_score_a=m.actual_score_a,
+            actual_score_b=m.actual_score_b,
+            prediction=m.prediction,
+            prediction_correct=m.prediction.is_correct if m.prediction else None,
+        )
+        for m in matches
+    ]
+    # Live and awaiting_results are derived from the clock, so filter
+    # on the derived value rather than the stored column.
+    if status is not None:
+        items = [i for i in items if i.status == status]
+    return {"all_matches": items}
 
 
 @app.get("/api/matches/{match_id}", response_model=schemas.MatchDetailResponse)
@@ -179,7 +211,7 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
         stadium=match.stadium,
         city=match.city,
         stage=match.stage,
-        status=match.status,
+        status=effective_status(match, datetime.now(timezone.utc)),
         actual_score_a=match.actual_score_a,
         actual_score_b=match.actual_score_b,
         prediction=match.prediction,
