@@ -1,71 +1,28 @@
-# Seed Data Files
+# Seed Data
 
-Drop the following files in this directory, then run `python scripts/seed.py`
-from the `backend/` directory. All formats are defined in `prd.md`.
+## Kaggle dataset (checked in)
 
-## teams.csv (required)
+From the "International football results 1872–2025" Kaggle dataset:
 
-```csv
-team_id,name,country_code,logo_url
-1,Argentina,ARG,https://example.com/arg.png
-2,France,FRA,https://example.com/fra.png
+- `results.csv` — all international matches. Columns:
+  `date,home_team,away_team,home_score,away_score,tournament,city,country,neutral`.
+  Rows with score `NA` are the upcoming World Cup 2026 group-stage fixtures
+  (72 matches, 48 teams); everything else is completed history.
+- `former_names.csv` — country renames (`current,former,start_date,end_date`),
+  used to normalize old team names while loading history.
+
+Preseed everything derived from this dataset:
+
+```bash
+python scripts/preseed_kaggle.py
 ```
 
-## matches.csv (required)
+This loads `historical_results`, creates the 48 teams and 72 group fixtures,
+and derives `h2h` records (per fixture pair) and `teams.recent_form` (last 5
+matches per team). Idempotent — safe to re-run.
 
-`stage` must be one of: `group`, `round16`, `quarterfinal`, `semifinal`, `final`.
+## Still pending (seeded separately when the data arrives)
 
-```csv
-match_id,team_a_id,team_b_id,match_date,stage
-1,1,2,2026-06-12T12:30:00Z,group
-```
-
-## squad_data.json (optional)
-
-Keyed by team_id.
-
-```json
-{
-  "1": [
-    {"player_id": 101, "name": "Lionel Messi", "position": "F", "number": 10}
-  ]
-}
-```
-
-## recent_form.json (optional)
-
-Keyed by team_id, last 5 matches. `result` must be `W`, `D`, or `L`.
-
-```json
-{
-  "1": [
-    {"match_date": "2026-06-08", "opponent": "Brazil", "result": "W", "score": "3-0"}
-  ]
-}
-```
-
-## predictions.json (required for predictions)
-
-Keyed by match_id. All values must be floats in [0, 1].
-
-```json
-{
-  "1": {"team_a_win_prob": 0.65, "team_b_win_prob": 0.25, "draw_prob": 0.10, "confidence": 0.78}
-}
-```
-
-## h2h_data.json (required for h2h)
-
-Keyed by `"<team_a_id>_<team_b_id>"`. `last_match_date` is optional.
-
-```json
-{
-  "1_2": {"team_a_wins": 3, "team_b_wins": 2, "draws": 1, "last_match_date": "2024-03-15"}
-}
-```
-
-## Seeding order
-
-`scripts/seed.py` runs everything in dependency order. To run loaders
-individually: teams first, then matches, then predictions and h2h. All loaders
-are idempotent — re-running after fixing a file updates existing rows.
+- **Team metadata / squads / players** — logos, squad rosters
+  (file format TBD; will be provided later)
+- **Predictions** — pre-computed model output per match

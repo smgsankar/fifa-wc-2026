@@ -1,11 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     JSON,
     Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -85,6 +87,28 @@ class H2H(TimestampMixin, Base):
     last_match_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class HistoricalResult(Base):
+    """Completed international matches (Kaggle dataset), used to derive
+    h2h records and recent form. Team names are normalized to current names."""
+
+    __tablename__ = "historical_results"
+    __table_args__ = (
+        Index("ix_historical_home_date", "home_team", "match_date"),
+        Index("ix_historical_away_date", "away_team", "match_date"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    match_date: Mapped[date] = mapped_column(Date, nullable=False)
+    home_team: Mapped[str] = mapped_column(String, nullable=False)
+    away_team: Mapped[str] = mapped_column(String, nullable=False)
+    home_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    away_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    tournament: Mapped[str] = mapped_column(String, nullable=False)
+    city: Mapped[str | None] = mapped_column(String, nullable=True)
+    country: Mapped[str | None] = mapped_column(String, nullable=True)
+    neutral: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class ModelStats(Base):

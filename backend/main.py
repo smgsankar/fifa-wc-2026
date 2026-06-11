@@ -60,7 +60,7 @@ def upcoming_matches(db: Session, limit: int) -> list[models.Match]:
     return (
         match_query(db)
         .filter(models.Match.status == "pending")
-        .order_by(models.Match.match_date.asc())
+        .order_by(models.Match.match_date.asc(), models.Match.match_id.asc())
         .limit(limit)
         .all()
     )
@@ -129,7 +129,9 @@ def get_all_matches(
         )
     if stage is not None:
         query = query.filter(models.Match.stage == stage)
-    matches = query.order_by(models.Match.match_date.asc()).all()
+    matches = query.order_by(
+        models.Match.match_date.asc(), models.Match.match_id.asc()
+    ).all()
     return {
         "all_matches": [
             schemas.MatchListItem(
