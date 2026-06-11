@@ -23,6 +23,7 @@ const STATUS_OPTIONS: SelectOption[] = [
   { value: 'all', label: 'All' },
   { value: 'pending', label: 'Upcoming' },
   { value: 'live', label: 'Live' },
+  { value: 'awaiting_results', label: 'Waiting for results' },
   { value: 'completed', label: 'Completed' },
 ]
 

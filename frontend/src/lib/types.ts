@@ -47,7 +47,7 @@ export interface H2H {
   last_match: LastMatch | null
 }
 
-export type MatchStatus = 'pending' | 'live' | 'completed'
+export type MatchStatus = 'pending' | 'live' | 'awaiting_results' | 'completed'
 
 export interface MatchSummary {
   match_id: number

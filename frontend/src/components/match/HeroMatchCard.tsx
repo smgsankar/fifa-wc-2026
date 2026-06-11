@@ -15,9 +15,9 @@ export default function HeroMatchCard({ match }: { match: MatchSummary }) {
     >
       <div className="flex items-center justify-between gap-3 border-b border-ink/15 px-5 py-3 sm:px-8 dark:border-stone-100/15">
         <p className="font-display text-[0.65rem] font-bold tracking-[0.3em] uppercase text-pitch-600 dark:text-pitch-300">
-          Next Match · {stageLabel(match.stage)}
+          {match.status === 'live' ? 'Live Now' : 'Next Match'} · {stageLabel(match.stage)}
         </p>
-        <StatusBadge status={match.status} />
+        {match.status !== 'live' && <StatusBadge status={match.status} />}
       </div>
 
       <div className="px-5 py-8 sm:px-8 sm:py-10">
@@ -61,7 +61,7 @@ export default function HeroMatchCard({ match }: { match: MatchSummary }) {
         )}
 
         <div className="mt-5">
-          <CountdownTimer targetIso={match.match_date} />
+          <CountdownTimer targetIso={match.match_date} status={match.status} />
         </div>
 
         {match.prediction && (

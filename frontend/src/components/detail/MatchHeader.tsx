@@ -15,7 +15,7 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
         <p className="font-display text-[0.65rem] font-bold tracking-[0.3em] uppercase text-pitch-600 dark:text-pitch-300">
           {stageLabel(match.stage)} · Match {match.match_id}
         </p>
-        <StatusBadge status={match.status} />
+        {match.status !== 'live' && <StatusBadge status={match.status} />}
       </div>
 
       <div className="px-5 py-8 sm:px-8 sm:py-10">
@@ -58,7 +58,7 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
 
         {!completed && (
           <div className="mt-5">
-            <CountdownTimer targetIso={match.match_date} />
+            <CountdownTimer targetIso={match.match_date} status={match.status} />
           </div>
         )}
       </div>
