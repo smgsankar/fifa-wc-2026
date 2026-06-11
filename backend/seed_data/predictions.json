@@ -1,0 +1,730 @@
+{
+  "predictions": [
+    {
+      "match_id": 1,
+      "team_a": "Mexico",
+      "team_b": "South Africa",
+      "team_a_win_prob": 0.5869,
+      "team_b_win_prob": 0.1598,
+      "draw_prob": 0.2533,
+      "confidence": 0.5869,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 2,
+      "team_a": "South Korea",
+      "team_b": "Czech Republic",
+      "team_a_win_prob": 0.3017,
+      "team_b_win_prob": 0.4273,
+      "draw_prob": 0.271,
+      "confidence": 0.4273,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 3,
+      "team_a": "Canada",
+      "team_b": "Bosnia and Herzegovina",
+      "team_a_win_prob": 0.4893,
+      "team_b_win_prob": 0.2259,
+      "draw_prob": 0.2848,
+      "confidence": 0.4893,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 4,
+      "team_a": "United States",
+      "team_b": "Paraguay",
+      "team_a_win_prob": 0.4703,
+      "team_b_win_prob": 0.2874,
+      "draw_prob": 0.2423,
+      "confidence": 0.4703,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 5,
+      "team_a": "Australia",
+      "team_b": "Turkey",
+      "team_a_win_prob": 0.3096,
+      "team_b_win_prob": 0.4272,
+      "draw_prob": 0.2632,
+      "confidence": 0.4272,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 6,
+      "team_a": "Brazil",
+      "team_b": "Morocco",
+      "team_a_win_prob": 0.3006,
+      "team_b_win_prob": 0.4285,
+      "draw_prob": 0.2709,
+      "confidence": 0.4285,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 7,
+      "team_a": "Haiti",
+      "team_b": "Scotland",
+      "team_a_win_prob": 0.3217,
+      "team_b_win_prob": 0.4037,
+      "draw_prob": 0.2746,
+      "confidence": 0.4037,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 8,
+      "team_a": "Qatar",
+      "team_b": "Switzerland",
+      "team_a_win_prob": 0.1573,
+      "team_b_win_prob": 0.6053,
+      "draw_prob": 0.2374,
+      "confidence": 0.6053,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 9,
+      "team_a": "Germany",
+      "team_b": "Curaçao",
+      "team_a_win_prob": 0.6214,
+      "team_b_win_prob": 0.1612,
+      "draw_prob": 0.2174,
+      "confidence": 0.6214,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 10,
+      "team_a": "Ivory Coast",
+      "team_b": "Ecuador",
+      "team_a_win_prob": 0.4336,
+      "team_b_win_prob": 0.2699,
+      "draw_prob": 0.2965,
+      "confidence": 0.4336,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 11,
+      "team_a": "Netherlands",
+      "team_b": "Japan",
+      "team_a_win_prob": 0.3825,
+      "team_b_win_prob": 0.3348,
+      "draw_prob": 0.2827,
+      "confidence": 0.3825,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 12,
+      "team_a": "Sweden",
+      "team_b": "Tunisia",
+      "team_a_win_prob": 0.3074,
+      "team_b_win_prob": 0.4525,
+      "draw_prob": 0.2401,
+      "confidence": 0.4525,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 13,
+      "team_a": "Belgium",
+      "team_b": "Egypt",
+      "team_a_win_prob": 0.6278,
+      "team_b_win_prob": 0.1468,
+      "draw_prob": 0.2254,
+      "confidence": 0.6278,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 14,
+      "team_a": "Iran",
+      "team_b": "New Zealand",
+      "team_a_win_prob": 0.6765,
+      "team_b_win_prob": 0.1103,
+      "draw_prob": 0.2132,
+      "confidence": 0.6765,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 15,
+      "team_a": "Saudi Arabia",
+      "team_b": "Uruguay",
+      "team_a_win_prob": 0.3531,
+      "team_b_win_prob": 0.3619,
+      "draw_prob": 0.285,
+      "confidence": 0.3619,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 16,
+      "team_a": "Spain",
+      "team_b": "Cape Verde",
+      "team_a_win_prob": 0.6393,
+      "team_b_win_prob": 0.1362,
+      "draw_prob": 0.2245,
+      "confidence": 0.6393,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 17,
+      "team_a": "Argentina",
+      "team_b": "Algeria",
+      "team_a_win_prob": 0.4459,
+      "team_b_win_prob": 0.2603,
+      "draw_prob": 0.2938,
+      "confidence": 0.4459,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 18,
+      "team_a": "Austria",
+      "team_b": "Jordan",
+      "team_a_win_prob": 0.6689,
+      "team_b_win_prob": 0.1225,
+      "draw_prob": 0.2086,
+      "confidence": 0.6689,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 19,
+      "team_a": "France",
+      "team_b": "Senegal",
+      "team_a_win_prob": 0.5043,
+      "team_b_win_prob": 0.2385,
+      "draw_prob": 0.2572,
+      "confidence": 0.5043,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 20,
+      "team_a": "Iraq",
+      "team_b": "Norway",
+      "team_a_win_prob": 0.1961,
+      "team_b_win_prob": 0.5463,
+      "draw_prob": 0.2576,
+      "confidence": 0.5463,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 21,
+      "team_a": "England",
+      "team_b": "Croatia",
+      "team_a_win_prob": 0.5612,
+      "team_b_win_prob": 0.1796,
+      "draw_prob": 0.2592,
+      "confidence": 0.5612,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 22,
+      "team_a": "Ghana",
+      "team_b": "Panama",
+      "team_a_win_prob": 0.3556,
+      "team_b_win_prob": 0.388,
+      "draw_prob": 0.2564,
+      "confidence": 0.388,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 23,
+      "team_a": "Portugal",
+      "team_b": "DR Congo",
+      "team_a_win_prob": 0.491,
+      "team_b_win_prob": 0.2372,
+      "draw_prob": 0.2718,
+      "confidence": 0.491,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 24,
+      "team_a": "Uzbekistan",
+      "team_b": "Colombia",
+      "team_a_win_prob": 0.2843,
+      "team_b_win_prob": 0.4439,
+      "draw_prob": 0.2718,
+      "confidence": 0.4439,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 25,
+      "team_a": "Canada",
+      "team_b": "Qatar",
+      "team_a_win_prob": 0.6802,
+      "team_b_win_prob": 0.0995,
+      "draw_prob": 0.2203,
+      "confidence": 0.6802,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 26,
+      "team_a": "Czech Republic",
+      "team_b": "South Africa",
+      "team_a_win_prob": 0.4743,
+      "team_b_win_prob": 0.2613,
+      "draw_prob": 0.2644,
+      "confidence": 0.4743,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 27,
+      "team_a": "Mexico",
+      "team_b": "South Korea",
+      "team_a_win_prob": 0.6107,
+      "team_b_win_prob": 0.1489,
+      "draw_prob": 0.2404,
+      "confidence": 0.6107,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 28,
+      "team_a": "Switzerland",
+      "team_b": "Bosnia and Herzegovina",
+      "team_a_win_prob": 0.4555,
+      "team_b_win_prob": 0.275,
+      "draw_prob": 0.2695,
+      "confidence": 0.4555,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 29,
+      "team_a": "Brazil",
+      "team_b": "Haiti",
+      "team_a_win_prob": 0.4967,
+      "team_b_win_prob": 0.2511,
+      "draw_prob": 0.2522,
+      "confidence": 0.4967,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 30,
+      "team_a": "Scotland",
+      "team_b": "Morocco",
+      "team_a_win_prob": 0.2787,
+      "team_b_win_prob": 0.4419,
+      "draw_prob": 0.2794,
+      "confidence": 0.4419,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 31,
+      "team_a": "Turkey",
+      "team_b": "Paraguay",
+      "team_a_win_prob": 0.5212,
+      "team_b_win_prob": 0.2337,
+      "draw_prob": 0.2451,
+      "confidence": 0.5212,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 32,
+      "team_a": "United States",
+      "team_b": "Australia",
+      "team_a_win_prob": 0.453,
+      "team_b_win_prob": 0.3047,
+      "draw_prob": 0.2423,
+      "confidence": 0.453,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 33,
+      "team_a": "Ecuador",
+      "team_b": "Curaçao",
+      "team_a_win_prob": 0.4514,
+      "team_b_win_prob": 0.2646,
+      "draw_prob": 0.284,
+      "confidence": 0.4514,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 34,
+      "team_a": "Germany",
+      "team_b": "Ivory Coast",
+      "team_a_win_prob": 0.5065,
+      "team_b_win_prob": 0.2385,
+      "draw_prob": 0.255,
+      "confidence": 0.5065,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 35,
+      "team_a": "Netherlands",
+      "team_b": "Sweden",
+      "team_a_win_prob": 0.6855,
+      "team_b_win_prob": 0.1194,
+      "draw_prob": 0.1951,
+      "confidence": 0.6855,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 36,
+      "team_a": "Tunisia",
+      "team_b": "Japan",
+      "team_a_win_prob": 0.2074,
+      "team_b_win_prob": 0.5371,
+      "draw_prob": 0.2555,
+      "confidence": 0.5371,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 37,
+      "team_a": "Belgium",
+      "team_b": "Iran",
+      "team_a_win_prob": 0.5951,
+      "team_b_win_prob": 0.1713,
+      "draw_prob": 0.2336,
+      "confidence": 0.5951,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 38,
+      "team_a": "New Zealand",
+      "team_b": "Egypt",
+      "team_a_win_prob": 0.1653,
+      "team_b_win_prob": 0.5915,
+      "draw_prob": 0.2432,
+      "confidence": 0.5915,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 39,
+      "team_a": "Spain",
+      "team_b": "Saudi Arabia",
+      "team_a_win_prob": 0.6827,
+      "team_b_win_prob": 0.1094,
+      "draw_prob": 0.2079,
+      "confidence": 0.6827,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 40,
+      "team_a": "Uruguay",
+      "team_b": "Cape Verde",
+      "team_a_win_prob": 0.3773,
+      "team_b_win_prob": 0.3338,
+      "draw_prob": 0.2889,
+      "confidence": 0.3773,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 41,
+      "team_a": "Argentina",
+      "team_b": "Austria",
+      "team_a_win_prob": 0.385,
+      "team_b_win_prob": 0.3207,
+      "draw_prob": 0.2943,
+      "confidence": 0.385,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 42,
+      "team_a": "France",
+      "team_b": "Iraq",
+      "team_a_win_prob": 0.5717,
+      "team_b_win_prob": 0.1847,
+      "draw_prob": 0.2436,
+      "confidence": 0.5717,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 43,
+      "team_a": "Jordan",
+      "team_b": "Algeria",
+      "team_a_win_prob": 0.2048,
+      "team_b_win_prob": 0.5455,
+      "draw_prob": 0.2497,
+      "confidence": 0.5455,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 44,
+      "team_a": "Norway",
+      "team_b": "Senegal",
+      "team_a_win_prob": 0.5532,
+      "team_b_win_prob": 0.2068,
+      "draw_prob": 0.24,
+      "confidence": 0.5532,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 45,
+      "team_a": "Colombia",
+      "team_b": "DR Congo",
+      "team_a_win_prob": 0.4688,
+      "team_b_win_prob": 0.257,
+      "draw_prob": 0.2742,
+      "confidence": 0.4688,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 46,
+      "team_a": "England",
+      "team_b": "Ghana",
+      "team_a_win_prob": 0.7021,
+      "team_b_win_prob": 0.0913,
+      "draw_prob": 0.2066,
+      "confidence": 0.7021,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 47,
+      "team_a": "Panama",
+      "team_b": "Croatia",
+      "team_a_win_prob": 0.2839,
+      "team_b_win_prob": 0.4715,
+      "draw_prob": 0.2446,
+      "confidence": 0.4715,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 48,
+      "team_a": "Portugal",
+      "team_b": "Uzbekistan",
+      "team_a_win_prob": 0.5354,
+      "team_b_win_prob": 0.2123,
+      "draw_prob": 0.2523,
+      "confidence": 0.5354,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 49,
+      "team_a": "Bosnia and Herzegovina",
+      "team_b": "Qatar",
+      "team_a_win_prob": 0.5998,
+      "team_b_win_prob": 0.1672,
+      "draw_prob": 0.233,
+      "confidence": 0.5998,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 50,
+      "team_a": "Canada",
+      "team_b": "Switzerland",
+      "team_a_win_prob": 0.4255,
+      "team_b_win_prob": 0.2779,
+      "draw_prob": 0.2966,
+      "confidence": 0.4255,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 51,
+      "team_a": "Mexico",
+      "team_b": "Czech Republic",
+      "team_a_win_prob": 0.5115,
+      "team_b_win_prob": 0.2164,
+      "draw_prob": 0.2721,
+      "confidence": 0.5115,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 52,
+      "team_a": "Morocco",
+      "team_b": "Haiti",
+      "team_a_win_prob": 0.5742,
+      "team_b_win_prob": 0.1655,
+      "draw_prob": 0.2603,
+      "confidence": 0.5742,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 53,
+      "team_a": "Scotland",
+      "team_b": "Brazil",
+      "team_a_win_prob": 0.3782,
+      "team_b_win_prob": 0.3612,
+      "draw_prob": 0.2606,
+      "confidence": 0.3782,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 54,
+      "team_a": "South Africa",
+      "team_b": "South Korea",
+      "team_a_win_prob": 0.4179,
+      "team_b_win_prob": 0.3093,
+      "draw_prob": 0.2728,
+      "confidence": 0.4179,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 55,
+      "team_a": "Curaçao",
+      "team_b": "Ivory Coast",
+      "team_a_win_prob": 0.2887,
+      "team_b_win_prob": 0.4552,
+      "draw_prob": 0.2561,
+      "confidence": 0.4552,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 56,
+      "team_a": "Ecuador",
+      "team_b": "Germany",
+      "team_a_win_prob": 0.2504,
+      "team_b_win_prob": 0.4641,
+      "draw_prob": 0.2855,
+      "confidence": 0.4641,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 57,
+      "team_a": "Japan",
+      "team_b": "Sweden",
+      "team_a_win_prob": 0.6888,
+      "team_b_win_prob": 0.1105,
+      "draw_prob": 0.2007,
+      "confidence": 0.6888,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 58,
+      "team_a": "Paraguay",
+      "team_b": "Australia",
+      "team_a_win_prob": 0.3722,
+      "team_b_win_prob": 0.3392,
+      "draw_prob": 0.2886,
+      "confidence": 0.3722,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 59,
+      "team_a": "Tunisia",
+      "team_b": "Netherlands",
+      "team_a_win_prob": 0.2152,
+      "team_b_win_prob": 0.5338,
+      "draw_prob": 0.251,
+      "confidence": 0.5338,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 60,
+      "team_a": "United States",
+      "team_b": "Turkey",
+      "team_a_win_prob": 0.3627,
+      "team_b_win_prob": 0.4116,
+      "draw_prob": 0.2257,
+      "confidence": 0.4116,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 61,
+      "team_a": "Cape Verde",
+      "team_b": "Saudi Arabia",
+      "team_a_win_prob": 0.4495,
+      "team_b_win_prob": 0.2875,
+      "draw_prob": 0.263,
+      "confidence": 0.4495,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 62,
+      "team_a": "Egypt",
+      "team_b": "Iran",
+      "team_a_win_prob": 0.3451,
+      "team_b_win_prob": 0.3436,
+      "draw_prob": 0.3113,
+      "confidence": 0.3451,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 63,
+      "team_a": "New Zealand",
+      "team_b": "Belgium",
+      "team_a_win_prob": 0.0582,
+      "team_b_win_prob": 0.7911,
+      "draw_prob": 0.1507,
+      "confidence": 0.7911,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 64,
+      "team_a": "Norway",
+      "team_b": "France",
+      "team_a_win_prob": 0.4551,
+      "team_b_win_prob": 0.2965,
+      "draw_prob": 0.2484,
+      "confidence": 0.4551,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 65,
+      "team_a": "Senegal",
+      "team_b": "Iraq",
+      "team_a_win_prob": 0.4633,
+      "team_b_win_prob": 0.2576,
+      "draw_prob": 0.2791,
+      "confidence": 0.4633,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 66,
+      "team_a": "Uruguay",
+      "team_b": "Spain",
+      "team_a_win_prob": 0.164,
+      "team_b_win_prob": 0.5731,
+      "draw_prob": 0.2629,
+      "confidence": 0.5731,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 67,
+      "team_a": "Algeria",
+      "team_b": "Austria",
+      "team_a_win_prob": 0.3256,
+      "team_b_win_prob": 0.3766,
+      "draw_prob": 0.2978,
+      "confidence": 0.3766,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 68,
+      "team_a": "Colombia",
+      "team_b": "Portugal",
+      "team_a_win_prob": 0.3792,
+      "team_b_win_prob": 0.363,
+      "draw_prob": 0.2578,
+      "confidence": 0.3792,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 69,
+      "team_a": "Croatia",
+      "team_b": "Ghana",
+      "team_a_win_prob": 0.5689,
+      "team_b_win_prob": 0.1883,
+      "draw_prob": 0.2428,
+      "confidence": 0.5689,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 70,
+      "team_a": "DR Congo",
+      "team_b": "Uzbekistan",
+      "team_a_win_prob": 0.4177,
+      "team_b_win_prob": 0.2737,
+      "draw_prob": 0.3086,
+      "confidence": 0.4177,
+      "predicted_outcome": "team_a_wins"
+    },
+    {
+      "match_id": 71,
+      "team_a": "Jordan",
+      "team_b": "Argentina",
+      "team_a_win_prob": 0.1632,
+      "team_b_win_prob": 0.604,
+      "draw_prob": 0.2328,
+      "confidence": 0.604,
+      "predicted_outcome": "team_b_wins"
+    },
+    {
+      "match_id": 72,
+      "team_a": "Panama",
+      "team_b": "England",
+      "team_a_win_prob": 0.1498,
+      "team_b_win_prob": 0.6257,
+      "draw_prob": 0.2245,
+      "confidence": 0.6257,
+      "predicted_outcome": "team_b_wins"
+    }
+  ],
+  "model_info": {
+    "algorithm": "Logistic Regression",
+    "training_data": "International matches 2006-2026",
+    "total_matches_used": 19264,
+    "generated_at": "2026-06-11T18:57:57Z"
+  }
+}
