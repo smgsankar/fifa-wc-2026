@@ -41,7 +41,7 @@ export default function ProbabilityBar({
       >
         <div className="bg-pitch-600" style={{ width: `${a * 100}%` }} />
         <div className="bg-stone-300 dark:bg-stone-700" style={{ width: `${draw * 100}%` }} />
-        <div className="bg-ink dark:bg-stone-100" style={{ width: `${b * 100}%` }} />
+        <div className="bg-ink dark:bg-stone-300" style={{ width: `${b * 100}%` }} />
       </div>
       {showConfidence && (
         <p className="mt-2 text-right font-display text-[0.65rem] font-semibold tracking-[0.15em] uppercase text-ink/50 dark:text-stone-100/50">

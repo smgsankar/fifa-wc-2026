@@ -33,7 +33,7 @@ export default function H2HPanel({ h2h, teamA, teamB }: H2HPanelProps) {
       <div className="mt-2 flex h-2.5 w-full overflow-hidden rounded-full">
         <div className="bg-pitch-600" style={{ width: `${(h2h.team_a_wins / total) * 100}%` }} />
         <div className="bg-stone-300 dark:bg-stone-700" style={{ width: `${(h2h.draws / total) * 100}%` }} />
-        <div className="bg-ink dark:bg-stone-100" style={{ width: `${(h2h.team_b_wins / total) * 100}%` }} />
+        <div className="bg-ink dark:bg-stone-300" style={{ width: `${(h2h.team_b_wins / total) * 100}%` }} />
       </div>
 
       <p className="mt-4 text-xs text-ink/50 dark:text-stone-100/50">

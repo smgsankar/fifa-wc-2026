@@ -30,7 +30,7 @@ export default function TeamTabbedPanels({
                 onClick={() => setSelectedId(team.id)}
                 className={`flex min-w-0 items-center justify-center gap-2 px-3 py-2.5 font-display text-xs font-bold tracking-[0.15em] uppercase transition-colors ${
                   active
-                    ? 'bg-ink text-paper dark:bg-stone-100 dark:text-night'
+                    ? 'bg-ink text-paper dark:bg-stone-300 dark:text-night'
                     : 'text-ink/60 hover:text-ink dark:text-stone-100/60 dark:hover:text-stone-100'
                 }`}
               >
