@@ -17,12 +17,27 @@ Preseed everything derived from this dataset:
 python scripts/preseed_kaggle.py
 ```
 
-This loads `historical_results`, creates the 48 teams and 72 group fixtures,
-and derives `h2h` records (per fixture pair) and `teams.recent_form` (last 5
-matches per team). Idempotent — safe to re-run.
+This loads `historical_results`, creates the 48 teams and 72 group fixtures
+(with flag images from [Flagpedia's CDN](https://flagpedia.net/download/api)
+as `teams.logo_url`), and derives `h2h` records (per fixture pair) and
+`teams.recent_form` (last 5 matches per team). Idempotent — safe to re-run.
+
+## Squads (checked in)
+
+- `squads.csv` — 26-player rosters for all 48 teams, extracted from the
+  official FIFA squad-list PDF. Columns:
+  `country_code,team,number,position,name,dob,club`.
+
+Regenerate from the PDF (needs `pip install pdfplumber`), then seed
+`teams.squad`:
+
+```bash
+python scripts/extract_squads.py ~/Downloads/SquadLists-English.pdf
+python scripts/seed_squads.py
+```
+
+Idempotent — safe to re-run.
 
 ## Still pending (seeded separately when the data arrives)
 
-- **Team metadata / squads / players** — logos, squad rosters
-  (file format TBD; will be provided later)
 - **Predictions** — pre-computed model output per match

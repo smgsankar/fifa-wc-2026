@@ -12,13 +12,14 @@ Kaggle dataset):
 
 Pipeline (idempotent, safe to re-run):
   1. historical_results  <- completed rows, former team names normalized
-  2. teams               <- 48 teams appearing in WC 2026 fixtures
+  2. teams               <- 48 teams appearing in WC 2026 fixtures, with
+                            flag images from Flagpedia's CDN as logo_url
   3. matches             <- 72 group-stage fixtures (match_id by date order)
   4. h2h                 <- derived from history for each fixture's team pair
   5. teams.recent_form   <- derived from history (last 5 matches per team)
 
-Squads, team logos, and predictions are seeded separately when their data
-files arrive.
+Squads are seeded separately by scripts/seed_squads.py; predictions are
+seeded separately when their data files arrive.
 """
 
 from datetime import date, datetime, timezone
@@ -27,6 +28,25 @@ from common import load_csv
 
 from database import Base, SessionLocal, engine
 from models import H2H, HistoricalResult, Match, Team
+
+# ISO 3166-1 alpha-2 codes for flag images from Flagpedia's CDN
+# (https://flagpedia.net/download/api); England/Scotland use GB subdivision codes.
+ISO2_CODES = {
+    "Algeria": "dz", "Argentina": "ar", "Australia": "au", "Austria": "at",
+    "Belgium": "be", "Bosnia and Herzegovina": "ba", "Brazil": "br",
+    "Canada": "ca", "Cape Verde": "cv", "Colombia": "co", "Croatia": "hr",
+    "Curaçao": "cw", "Czech Republic": "cz", "DR Congo": "cd",
+    "Ecuador": "ec", "Egypt": "eg", "England": "gb-eng", "France": "fr",
+    "Germany": "de", "Ghana": "gh", "Haiti": "ht", "Iran": "ir",
+    "Iraq": "iq", "Ivory Coast": "ci", "Japan": "jp", "Jordan": "jo",
+    "Mexico": "mx", "Morocco": "ma", "Netherlands": "nl",
+    "New Zealand": "nz", "Norway": "no", "Panama": "pa", "Paraguay": "py",
+    "Portugal": "pt", "Qatar": "qa", "Saudi Arabia": "sa", "Scotland": "gb-sct",
+    "Senegal": "sn", "South Africa": "za", "South Korea": "kr",
+    "Spain": "es", "Sweden": "se", "Switzerland": "ch", "Tunisia": "tn",
+    "Turkey": "tr", "United States": "us", "Uruguay": "uy",
+    "Uzbekistan": "uz",
+}
 
 # FIFA country codes for the 48 qualified teams
 COUNTRY_CODES = {
@@ -109,9 +129,9 @@ def load_history(db, history: list[dict]) -> None:
 def seed_teams(db, fixtures: list[dict]) -> dict[str, int]:
     """Create the 48 teams; returns name -> team id."""
     names = sorted(set(r["home_team"] for r in fixtures) | set(r["away_team"] for r in fixtures))
-    missing_codes = [n for n in names if n not in COUNTRY_CODES]
+    missing_codes = [n for n in names if n not in COUNTRY_CODES or n not in ISO2_CODES]
     if missing_codes:
-        raise ValueError(f"No FIFA code mapped for teams: {missing_codes}")
+        raise ValueError(f"No FIFA/ISO2 code mapped for teams: {missing_codes}")
 
     created, updated = 0, 0
     name_to_id = {}
@@ -125,6 +145,7 @@ def seed_teams(db, fixtures: list[dict]) -> dict[str, int]:
             updated += 1
         team.name = name
         team.country_code = COUNTRY_CODES[name]
+        team.logo_url = f"https://flagcdn.com/{ISO2_CODES[name]}.svg"
         name_to_id[name] = team_id
     db.commit()
     print(f"teams: {created} created, {updated} updated ({len(names)} total)")
