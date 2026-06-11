@@ -58,7 +58,7 @@ def match_query(db: Session):
 
 # A match is considered live from kickoff until this long after; past the
 # window it is "awaiting_results" until actual scores are uploaded.
-LIVE_WINDOW = timedelta(minutes=100)
+LIVE_WINDOW = timedelta(minutes=120)
 
 
 def effective_status(match: models.Match, now: datetime) -> str:
