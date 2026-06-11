@@ -26,14 +26,18 @@ export default function CountdownTimer({
     }
     if (status === 'awaiting_results') {
       return (
-        <p className="text-center font-display text-lg font-black tracking-[0.2em] uppercase text-draw">
+        <p className="flex items-center justify-center gap-2.5 font-display text-lg font-black tracking-[0.2em] uppercase text-draw">
+          <span className="relative flex size-2.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-draw opacity-75" />
+            <span className="relative inline-flex size-2.5 rounded-full bg-draw" />
+          </span>
           Waiting for results
         </p>
       )
     }
     return (
       <p className="text-center font-display text-lg font-black tracking-[0.2em] uppercase text-pitch-600 dark:text-pitch-300">
-        Kicking off
+        Completed
       </p>
     )
   }
