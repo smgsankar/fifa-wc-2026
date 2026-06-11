@@ -6,6 +6,7 @@ const kickoffFmt = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
+  hour12: true,
 })
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
@@ -23,6 +24,7 @@ const dayHeadingFmt = new Intl.DateTimeFormat(undefined, {
 const timeFmt = new Intl.DateTimeFormat(undefined, {
   hour: 'numeric',
   minute: '2-digit',
+  hour12: true,
 })
 
 export function formatKickoff(iso: string): string {
