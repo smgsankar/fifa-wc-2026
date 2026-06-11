@@ -15,19 +15,7 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
         <p className="font-display text-[0.65rem] font-bold tracking-[0.3em] uppercase text-pitch-600 dark:text-pitch-300">
           {stageLabel(match.stage)} · Match {match.match_id}
         </p>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-xs text-ink/60 dark:text-stone-100/60">
-              {formatKickoff(match.match_date)}
-            </p>
-            {venue && (
-              <p className="mt-0.5 text-[0.65rem] tracking-wide text-ink/40 dark:text-stone-100/40">
-                {venue}
-              </p>
-            )}
-          </div>
-          <StatusBadge status={match.status} />
-        </div>
+        <StatusBadge status={match.status} />
       </div>
 
       <div className="px-5 py-8 sm:px-8 sm:py-10">
@@ -59,8 +47,17 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
           </div>
         </div>
 
+        <p className="mt-8 text-center text-sm font-medium text-ink/60 dark:text-stone-100/60">
+          {formatKickoff(match.match_date)}
+        </p>
+        {venue && (
+          <p className="mt-1 text-center text-xs tracking-wide text-ink/40 dark:text-stone-100/40">
+            {venue}
+          </p>
+        )}
+
         {!completed && (
-          <div className="mt-8">
+          <div className="mt-5">
             <CountdownTimer targetIso={match.match_date} />
           </div>
         )}
