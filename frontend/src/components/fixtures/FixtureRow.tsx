@@ -19,10 +19,23 @@ function TeamSide({ team, align }: { team: Team; align: 'left' | 'right' }) {
       className={`flex min-w-0 flex-1 items-center gap-2.5 ${align === 'right' ? 'flex-row-reverse' : ''}`}
     >
       <TeamLogo team={team} className="size-8 shrink-0" fallbackTextClass="text-[0.55rem]" />
-      <span className="truncate font-display text-sm font-bold tracking-tight uppercase sm:text-base">
-        <span className="sm:hidden">{team.country_code}</span>
-        <span className="hidden sm:inline">{team.name}</span>
+      <span className="truncate font-display text-base font-bold tracking-tight uppercase">
+        {team.name}
       </span>
+    </div>
+  )
+}
+
+function TeamRow({ team, score }: { team: Team; score: number | null }) {
+  return (
+    <div className="flex items-center gap-3">
+      <TeamLogo team={team} className="size-9 shrink-0" fallbackTextClass="text-[0.6rem]" />
+      <span className="min-w-0 flex-1 truncate font-display text-base font-bold tracking-tight uppercase">
+        {team.name}
+      </span>
+      {score !== null && (
+        <span className="shrink-0 font-mono text-base font-bold tabular-nums">{score}</span>
+      )}
     </div>
   )
 }
@@ -46,7 +59,11 @@ export default function FixtureRow({ match }: { match: MatchListItem }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-3">
+        <div className="space-y-3 sm:hidden">
+          <TeamRow team={match.team_a} score={completed && hasScore ? match.actual_score_a : null} />
+          <TeamRow team={match.team_b} score={completed && hasScore ? match.actual_score_b : null} />
+        </div>
+        <div className="hidden items-center gap-3 sm:flex">
           <TeamSide team={match.team_a} align="right" />
           {completed && hasScore ? (
             <span className="shrink-0 font-mono text-base font-bold tabular-nums">
@@ -58,7 +75,7 @@ export default function FixtureRow({ match }: { match: MatchListItem }) {
           <TeamSide team={match.team_b} align="left" />
         </div>
         {venue && (
-          <p className="mt-1 truncate text-center text-[0.65rem] tracking-wide text-ink/40 dark:text-stone-100/40">
+          <p className="mt-2 truncate text-[0.65rem] tracking-wide text-ink/40 sm:mt-1 sm:text-center dark:text-stone-100/40">
             {venue}
           </p>
         )}
