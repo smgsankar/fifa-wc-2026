@@ -13,36 +13,22 @@ import { RowsSkeleton } from '../components/ui/Skeleton'
 
 const STAGE_ORDER = ['group', 'round16', 'quarterfinal', 'semifinal', 'final']
 
-/** Accuracy sort: correct picks first, then misses, then unplayed matches. */
-function accuracyRank(m: MatchListItem): number {
-  if (m.prediction_correct === true) return 0
-  if (m.prediction_correct === false) return 1
-  return 2
-}
-
 function applyFilters(matches: MatchListItem[], f: FixtureFilters): MatchListItem[] {
   const result = matches.filter((m) => {
     if (f.status !== 'all' && m.status !== f.status) return false
     if (f.team !== 'all' && String(m.team_a.id) !== f.team && String(m.team_b.id) !== f.team)
       return false
     if (f.stage !== 'all' && m.stage !== f.stage) return false
-    if (f.date && dayKey(m.match_date) !== f.date) return false
+    const day = dayKey(m.match_date)
+    if (f.from && day < f.from) return false
+    if (f.to && day > f.to) return false
     return true
   })
 
   const byDate = (a: MatchListItem, b: MatchListItem) =>
     new Date(a.match_date).getTime() - new Date(b.match_date).getTime()
 
-  switch (f.sort) {
-    case 'date-desc':
-      return result.sort((a, b) => byDate(b, a))
-    case 'team':
-      return result.sort((a, b) => a.team_a.name.localeCompare(b.team_a.name) || byDate(a, b))
-    case 'accuracy':
-      return result.sort((a, b) => accuracyRank(a) - accuracyRank(b) || byDate(a, b))
-    default:
-      return result.sort(byDate)
-  }
+  return f.sort === 'date-desc' ? result.sort((a, b) => byDate(b, a)) : result.sort(byDate)
 }
 
 export default function FixturesPage() {
@@ -54,22 +40,33 @@ export default function FixturesPage() {
       status: searchParams.get('status') ?? 'all',
       team: searchParams.get('team') ?? 'all',
       stage: searchParams.get('stage') ?? 'all',
-      date: searchParams.get('date') ?? '',
+      from: searchParams.get('from') ?? '',
+      to: searchParams.get('to') ?? '',
       sort: searchParams.get('sort') ?? 'date-asc',
     }),
     [searchParams],
   )
 
   const hasActiveFilters =
-    filters.status !== 'all' || filters.team !== 'all' || filters.stage !== 'all' || !!filters.date
+    filters.status !== 'all' ||
+    filters.team !== 'all' ||
+    filters.stage !== 'all' ||
+    !!filters.from ||
+    !!filters.to
 
-  const setFilter = (key: keyof FixtureFilters, value: string) => {
+  /* Apply all entries in one update — consecutive setSearchParams calls in the
+     same tick would each start from the pre-navigation params and clobber
+     each other (the range picker sets `from` and `to` together). */
+  const setFilters = (updates: Partial<FixtureFilters>) => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        const isDefault = value === 'all' || value === '' || (key === 'sort' && value === 'date-asc')
-        if (isDefault) next.delete(key)
-        else next.set(key, value)
+        for (const [key, value] of Object.entries(updates)) {
+          const isDefault =
+            value === 'all' || value === '' || (key === 'sort' && value === 'date-asc')
+          if (isDefault) next.delete(key)
+          else next.set(key, value)
+        }
         return next
       },
       { replace: true },
@@ -80,7 +77,7 @@ export default function FixturesPage() {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev)
-        for (const key of ['status', 'team', 'stage', 'date']) next.delete(key)
+        for (const key of ['status', 'team', 'stage', 'from', 'to']) next.delete(key)
         return next
       },
       { replace: true },
@@ -105,9 +102,8 @@ export default function FixturesPage() {
 
   const filtered = useMemo(() => (data ? applyFilters([...data], filters) : []), [data, filters])
 
-  /* Group under date headings only for chronological sorts. */
+  /* Group under date headings — both sorts are chronological. */
   const groups = useMemo(() => {
-    if (filters.sort === 'team' || filters.sort === 'accuracy') return null
     const map = new Map<string, MatchListItem[]>()
     for (const m of filtered) {
       const key = dayKey(m.match_date)
@@ -116,11 +112,11 @@ export default function FixturesPage() {
       else map.set(key, [m])
     }
     return [...map.entries()]
-  }, [filtered, filters.sort])
+  }, [filtered])
 
   return (
     <div>
-      <SectionHeading kicker="All 64 matches" title="Fixtures & Results" />
+      <SectionHeading kicker="All matches" title="Fixtures & Results" />
 
       {loading ? (
         <RowsSkeleton count={10} />
@@ -128,7 +124,7 @@ export default function FixturesPage() {
         <ErrorState error={error} onRetry={retry} />
       ) : (
         <>
-          <FixturesControls filters={filters} onChange={setFilter} teams={teams} stages={stages} />
+          <FixturesControls filters={filters} onChange={setFilters} teams={teams} stages={stages} />
 
           <p className="mt-4 mb-3 text-xs text-ink/50 dark:text-stone-100/50">
             Showing {filtered.length} of {data?.length ?? 0} matches
@@ -150,7 +146,7 @@ export default function FixturesPage() {
                 ) : undefined
               }
             />
-          ) : groups ? (
+          ) : (
             <div className="space-y-8">
               {groups.map(([key, matches]) => (
                 <div key={key}>
@@ -163,12 +159,6 @@ export default function FixturesPage() {
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filtered.map((m) => (
-                <FixtureRow key={m.match_id} match={m} />
               ))}
             </div>
           )}
