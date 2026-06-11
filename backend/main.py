@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 
 import models
 import schemas
+from config import ALLOWED_ORIGINS
 from database import Base, engine, get_db
 
 
@@ -24,7 +25,7 @@ app = FastAPI(title="World Cup 2026 Prediction API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
