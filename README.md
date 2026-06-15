@@ -58,6 +58,13 @@ cd backend && python scripts/record_results.py
 It works against whatever `DATABASE_URL` points at, so the same script
 records results in production.
 
+Or automate it: with a free [football-data.org](https://www.football-data.org/)
+token, the backend can poll for finished scores and record them itself — map
+fixtures to the API once with `python scripts/map_external_ids.py`, then run
+`python scripts/sync_results.py` (or set `RESULTS_SYNC_ENABLED=true` to have the
+API poll on an interval). See
+[backend/README.md](backend/README.md#automated-results-sync-football-dataorg).
+
 ## Deployment
 
 - **Backend → Railway**: Postgres service + API service rooted at

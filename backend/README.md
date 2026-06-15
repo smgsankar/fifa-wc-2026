@@ -63,6 +63,58 @@ script records results in production.
 To recompute stats without recording anything (e.g. after editing scores
 directly in the database), run `python scripts/recompute_stats.py`.
 
+### Automated results sync (football-data.org)
+
+Instead of recording by hand, the backend can pull finished scores from
+[football-data.org](https://www.football-data.org/). Get a free API token,
+then run it in two steps.
+
+**1. Map fixtures to football-data.org ids (once):**
+
+```bash
+FOOTBALL_DATA_API_TOKEN=<token> python scripts/map_external_ids.py
+```
+
+This pulls the competition's full fixture list, reconciles each match to ours
+by team identity (with an alias map for naming differences like *Korea
+Republic* → *South Korea*, plus accent-folding), and stores the API's match id
+in `Match.external_id`. Re-run it if the fixture set changes (e.g. once
+knockout pairings are decided). Fixtures it can't match are logged as warnings.
+
+**2. Poll the fixtures awaiting a result (repeatedly):**
+
+```bash
+FOOTBALL_DATA_API_TOKEN=<token> python scripts/sync_results.py
+```
+
+or let the API poll on a schedule. When `RESULTS_SYNC_ENABLED=true` and a
+token is set, the FastAPI app starts an in-process APScheduler job that calls
+the same sync every `RESULTS_SYNC_INTERVAL_SECONDS` (default 600, i.e. every
+10 minutes). The sync collects the `external_id`s of fixtures that have kicked
+off but have no result yet, asks the API for just those matches by id, writes
+the full-time score for any that have `FINISHED`, and recomputes model stats.
+Polling by id means it only ever queries the handful of matches in flight, and
+team-name reconciliation happens once (at mapping time) rather than every poll.
+
+The sync is idempotent — once a fixture is recorded it drops out of the
+awaiting set — and it works alongside the manual script (both share the same
+writer). Kicked-off fixtures with no `external_id` are logged as warnings
+(run the mapping step to fix). Final scores only: the free tier has no live data.
+
+> The mapping step adds the `external_id` column to an already-seeded database
+> automatically (the app otherwise only creates missing tables, never alters
+> them), so no manual migration is needed.
+
+Notes:
+
+- The scheduler runs in-process, so it only polls while a worker is up. On a
+  multi-instance deployment every instance would poll; that's harmless
+  (writes are idempotent) but wasteful — run a single instance, or move the
+  sync to a dedicated cron/worker calling `scripts/sync_results.py`.
+- Results are recorded after a match finishes (not live); the free tier
+  doesn't provide in-play scores. A 10-minute poll picks them up promptly
+  and stays well within the free tier's 10 requests/min.
+
 ## API endpoints
 
 | Method | Path | Description |
@@ -91,6 +143,10 @@ Full request/response shapes are documented in `prd.md` and live at `/docs`.
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/wc2026` |
 | `PORT` | Server port | `8000` |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins, no trailing slashes (e.g. `https://wc26.pages.dev`) | `http://localhost:5173` |
+| `FOOTBALL_DATA_API_TOKEN` | Token for the football-data.org results sync (blank disables it) | _(empty)_ |
+| `FOOTBALL_DATA_COMPETITION` | Competition code to poll | `WC` |
+| `RESULTS_SYNC_ENABLED` | Start the in-process results-sync scheduler | `false` |
+| `RESULTS_SYNC_INTERVAL_SECONDS` | Seconds between automated polls | `600` |
 
 ## Deploy to Railway
 

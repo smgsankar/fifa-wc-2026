@@ -44,6 +44,11 @@ class Match(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     match_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False, index=True)
+    # football-data.org match id, populated by scripts/map_external_ids.py and
+    # used to poll only the fixtures awaiting a result. Null until mapped.
+    external_id: Mapped[int | None] = mapped_column(
+        Integer, unique=True, nullable=True, index=True
+    )
     team_a_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     team_b_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     match_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

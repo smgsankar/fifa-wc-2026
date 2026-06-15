@@ -19,6 +19,7 @@ from sqlalchemy.orm import joinedload
 
 from database import Base, SessionLocal, engine
 from models import Match
+from results_sync import apply_result
 
 
 def ask(prompt: str) -> str | None:
@@ -112,9 +113,7 @@ def record_one(db, match: Match) -> bool:
         print("Discarded.")
         return False
 
-    match.actual_score_a = score_a
-    match.actual_score_b = score_b
-    match.status = "completed"
+    apply_result(match, score_a, score_b)
     db.commit()
     print(f"Saved: {match.team_a.name} {score_a}-{score_b} {match.team_b.name}")
     return True

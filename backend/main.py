@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from typing import Literal
@@ -11,14 +12,60 @@ from sqlalchemy.orm import Session, joinedload
 
 import models
 import schemas
-from config import ALLOWED_ORIGINS
+from config import (
+    ALLOWED_ORIGINS,
+    FOOTBALL_DATA_API_TOKEN,
+    RESULTS_SYNC_ENABLED,
+    RESULTS_SYNC_INTERVAL_SECONDS,
+)
 from database import Base, engine, get_db
+
+logger = logging.getLogger("uvicorn.error")
+
+
+def _run_results_sync() -> None:
+    """Scheduler job: pull finished results, swallowing errors so a bad poll
+    (rate limit, network blip) never crashes the worker thread."""
+    from results_sync import sync_results
+
+    try:
+        summary = sync_results()
+        if summary["updated"]:
+            logger.info("Results sync recorded %s new result(s)", summary["updated"])
+    except Exception:  # noqa: BLE001 — keep the recurring job alive
+        logger.exception("Results sync failed")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    yield
+
+    scheduler = None
+    if RESULTS_SYNC_ENABLED and FOOTBALL_DATA_API_TOKEN:
+        from apscheduler.schedulers.background import BackgroundScheduler
+
+        scheduler = BackgroundScheduler(daemon=True)
+        scheduler.add_job(
+            _run_results_sync,
+            "interval",
+            seconds=RESULTS_SYNC_INTERVAL_SECONDS,
+            id="results_sync",
+            max_instances=1,  # never overlap runs
+            coalesce=True,  # collapse missed runs into one
+            next_run_time=datetime.now(timezone.utc),  # also run once at startup
+        )
+        scheduler.start()
+        logger.info(
+            "Results sync enabled: polling every %ss", RESULTS_SYNC_INTERVAL_SECONDS
+        )
+    elif RESULTS_SYNC_ENABLED:
+        logger.warning("RESULTS_SYNC_ENABLED but no FOOTBALL_DATA_API_TOKEN; sync disabled")
+
+    try:
+        yield
+    finally:
+        if scheduler:
+            scheduler.shutdown(wait=False)
 
 
 app = FastAPI(title="World Cup 2026 Prediction API", lifespan=lifespan)
