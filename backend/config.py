@@ -1,8 +1,18 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# One config path that serves both environments:
+#   - Locally, values come from backend/.env (loaded by explicit path so scripts
+#     pick them up regardless of which directory they're invoked from).
+#   - On Railway (or any host), service variables / secrets are injected straight
+#     into the process environment; there is no .env file in the deploy, so the
+#     load below is a harmless no-op and os.getenv reads the injected values.
+# override=False means an already-present process-environment variable (i.e. a
+# Railway secret) always wins over a .env value, so the same code works in both
+# places without branching on the environment.
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 
 def _normalize_db_url(url: str) -> str:

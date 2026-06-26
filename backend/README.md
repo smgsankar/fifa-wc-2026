@@ -66,13 +66,17 @@ directly in the database), run `python scripts/recompute_stats.py`.
 ### Automated results sync (football-data.org)
 
 Instead of recording by hand, the backend can pull finished scores from
-[football-data.org](https://www.football-data.org/). Get a free API token,
-then run it in two steps.
+[football-data.org](https://www.football-data.org/). Get a free API token and
+add it to `backend/.env` as `FOOTBALL_DATA_API_TOKEN=<token>` — config loads
+that file regardless of where you invoke the scripts from, so both steps below
+pick the token up automatically. (You can still override it inline per command,
+e.g. `FOOTBALL_DATA_API_TOKEN=<token> python scripts/...`.) Then run it in two
+steps.
 
 **1. Map fixtures to football-data.org ids (once):**
 
 ```bash
-FOOTBALL_DATA_API_TOKEN=<token> python scripts/map_external_ids.py
+python scripts/map_external_ids.py
 ```
 
 This pulls the competition's full fixture list, reconciles each match to ours
@@ -84,7 +88,7 @@ knockout pairings are decided). Fixtures it can't match are logged as warnings.
 **2. Poll the fixtures awaiting a result (repeatedly):**
 
 ```bash
-FOOTBALL_DATA_API_TOKEN=<token> python scripts/sync_results.py
+python scripts/sync_results.py
 ```
 
 or let the API poll on a schedule. When `RESULTS_SYNC_ENABLED=true` and a
