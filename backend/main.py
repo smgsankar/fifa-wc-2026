@@ -108,6 +108,10 @@ def match_query(db: Session):
 # window it is "awaiting_results" until actual scores are uploaded.
 LIVE_WINDOW = timedelta(minutes=120)
 
+# How many of a team's most recent matches to show as "recent form". Mirrors
+# the value used when preseeding teams.recent_form from historical results.
+RECENT_FORM_SIZE = 5
+
 
 def effective_status(match: models.Match, now: datetime) -> str:
     """Derive the displayed status from the stored one and the clock."""
@@ -233,6 +237,58 @@ def get_all_matches(
     return {"all_matches": items}
 
 
+def completed_wc_form(db: Session, team: models.Team) -> list[dict]:
+    """A team's completed World Cup fixtures as recent-form entries.
+
+    The stored teams.recent_form is derived once from pre-tournament history, so
+    matches that finish during the World Cup are missing from it. These entries
+    are merged in at read time (see recent_form_for) to keep the form current.
+    """
+    matches = (
+        db.query(models.Match)
+        .options(
+            joinedload(models.Match.team_a), joinedload(models.Match.team_b)
+        )
+        .filter(
+            models.Match.status == "completed",
+            or_(
+                models.Match.team_a_id == team.id,
+                models.Match.team_b_id == team.id,
+            ),
+        )
+        .all()
+    )
+    entries: list[dict] = []
+    for m in matches:
+        if m.actual_score_a is None or m.actual_score_b is None:
+            continue
+        is_a = m.team_a_id == team.id
+        own = m.actual_score_a if is_a else m.actual_score_b
+        opp = m.actual_score_b if is_a else m.actual_score_a
+        opponent = m.team_b if is_a else m.team_a
+        kickoff = m.match_date
+        if kickoff.tzinfo is None:
+            kickoff = kickoff.replace(tzinfo=timezone.utc)
+        entries.append(
+            {
+                "match_date": kickoff.astimezone(timezone.utc).date().isoformat(),
+                "opponent": opponent.name,
+                "result": "W" if own > opp else "L" if own < opp else "D",
+                "score": f"{own}-{opp}",
+            }
+        )
+    return entries
+
+
+def recent_form_for(db: Session, team: models.Team) -> list[dict]:
+    """Most recent matches for a team, newest first, blending completed World
+    Cup fixtures into the pre-tournament form stored on the team."""
+    combined = completed_wc_form(db, team) + list(team.recent_form or [])
+    # ISO date strings sort lexically; World Cup dates are newest and float up.
+    combined.sort(key=lambda e: e["match_date"], reverse=True)
+    return combined[:RECENT_FORM_SIZE]
+
+
 @app.get("/api/matches/{match_id}", response_model=schemas.MatchDetailResponse)
 def get_match_detail(match_id: int, db: Session = Depends(get_db)):
     match = match_query(db).filter(models.Match.match_id == match_id).first()
@@ -247,7 +303,7 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
             logo_url=team.logo_url,
             head_coach=team.head_coach,
             squad=team.squad or [],
-            recent_form=team.recent_form or [],
+            recent_form=recent_form_for(db, team),
         )
 
     detail = schemas.MatchDetail(
