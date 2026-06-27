@@ -59,6 +59,7 @@ API_NAME_ALIASES = {
     "Cote d'Ivoire": "Ivory Coast",
     "IR Iran": "Iran",
     "Cabo Verde": "Cape Verde",
+    "Cape Verde Islands": "Cape Verde",
     "Türkiye": "Turkey",
     "Turkiye": "Turkey",
     "USA": "United States",
