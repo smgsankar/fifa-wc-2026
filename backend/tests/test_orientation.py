@@ -1,7 +1,7 @@
 """Score orientation: mapping the feed's home/away onto our team_a/team_b."""
 
 from models import Match, Team
-from results_sync import _home_is_team_a, _oriented
+from results_sync import _home_is_team_a, _oriented, _strip_shootout_goals
 
 
 def fixture(team_a_name: str, team_b_name: str) -> Match:
@@ -32,3 +32,15 @@ def test_unknown_home_team_is_none():
 def test_oriented_flips_scores_and_penalties():
     assert _oriented(True, 2, 1) == (2, 1)
     assert _oriented(False, 2, 1) == (1, 2)
+
+
+def test_strip_shootout_goals_recovers_playing_score():
+    # football-data.org fullTime includes shootout goals: 1-1 (4-3 p) -> 5-4.
+    assert _strip_shootout_goals(5, 4, (4, 3)) == (1, 1)
+    assert _strip_shootout_goals(3, 5, (2, 4)) == (1, 1)
+
+
+def test_strip_shootout_goals_keeps_uninflated_score():
+    # If subtracting pens doesn't land on a draw, the feed wasn't inflated.
+    assert _strip_shootout_goals(1, 1, (4, 3)) == (1, 1)
+    assert _strip_shootout_goals(2, 1, (4, 3)) == (2, 1)

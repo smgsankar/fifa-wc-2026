@@ -475,6 +475,23 @@ def _oriented(home_is_a: bool, home_value: int, away_value: int) -> tuple[int, i
     return (home_value, away_value) if home_is_a else (away_value, home_value)
 
 
+def _strip_shootout_goals(
+    score_a: int, score_b: int, penalties: tuple[int, int]
+) -> tuple[int, int]:
+    """Recover the 120-minute score from a shootout match's fullTime.
+
+    football-data.org's score.fullTime INCLUDES the shootout goals (e.g. a
+    1-1 draw decided 4-3 on pens arrives as fullTime 5-4). A shootout only
+    ever follows a level playing score, so stripping the pens must yield a
+    draw — if it doesn't (or goes negative), the feed didn't inflate this
+    one and the score is kept as-is.
+    """
+    stripped_a, stripped_b = score_a - penalties[0], score_b - penalties[1]
+    if stripped_a == stripped_b and stripped_a >= 0:
+        return stripped_a, stripped_b
+    return score_a, score_b
+
+
 def _matches_awaiting_result(db, now: datetime) -> list[Match]:
     """Fixtures that have kicked off, aren't recorded, and have an external id."""
     return (
@@ -556,6 +573,7 @@ def sync_results(db=None, *, recompute: bool = True) -> dict:
             penalties = None
             if shootout.get("home") is not None and shootout.get("away") is not None:
                 penalties = _oriented(home_is_a, shootout["home"], shootout["away"])
+                score_a, score_b = _strip_shootout_goals(score_a, score_b, penalties)
 
             apply_result(
                 match,
