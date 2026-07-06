@@ -17,6 +17,9 @@ class TeamSummary(BaseModel):
     name: str
     country_code: str
     logo_url: str | None = None
+    # True for undecided knockout slots ("Winner SF 1"): the UI renders them
+    # as placeholders and keeps them out of team filters.
+    is_placeholder: bool = False
 
 
 class SquadPlayer(BaseModel):
@@ -85,6 +88,11 @@ class UpcomingMatch(MatchBase):
 class MatchListItem(UpcomingMatch):
     actual_score_a: int | None = None
     actual_score_b: int | None = None
+    # "regular" | "extra_time" | "penalties"; null when unknown. The actual
+    # score includes extra time; the shootout score is penalty_score_*.
+    decided_by: str | None = None
+    penalty_score_a: int | None = None
+    penalty_score_b: int | None = None
     prediction_correct: bool | None = None
 
 
@@ -94,6 +102,9 @@ class MatchDetail(MatchBase):
     h2h: H2HOut | None = None
     actual_score_a: int | None = None
     actual_score_b: int | None = None
+    decided_by: str | None = None
+    penalty_score_a: int | None = None
+    penalty_score_b: int | None = None
     prediction_correct: bool | None = None
 
 

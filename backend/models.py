@@ -37,6 +37,10 @@ class Team(TimestampMixin, Base):
     head_coach: Mapped[str | None] = mapped_column(String, nullable=True)
     squad: Mapped[list | None] = mapped_column(JSON, nullable=True, default=list)
     recent_form: Mapped[list | None] = mapped_column(JSON, nullable=True, default=list)
+    # Stand-in rows for undecided knockout slots (e.g. "Winner SF 1"). Replaced
+    # on the fixture by the real team once the feeding match is decided;
+    # excluded from team pickers and never carry squads/form/predictions.
+    is_placeholder: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class Match(TimestampMixin, Base):
@@ -58,6 +62,13 @@ class Match(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
     actual_score_a: Mapped[int | None] = mapped_column(Integer, nullable=True)
     actual_score_b: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # How the result was decided: "regular", "extra_time", or "penalties".
+    # Null when unknown (results recorded before this field existed, or via
+    # the manual script). actual_score_* is the full-time score including
+    # extra time; a shootout's score lives in penalty_score_*.
+    decided_by: Mapped[str | None] = mapped_column(String, nullable=True)
+    penalty_score_a: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    penalty_score_b: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     team_a: Mapped[Team] = relationship(foreign_keys=[team_a_id])
     team_b: Mapped[Team] = relationship(foreign_keys=[team_b_id])

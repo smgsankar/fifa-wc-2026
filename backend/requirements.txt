@@ -6,3 +6,8 @@ pydantic==2.11.4
 python-dotenv==1.1.0
 httpx==0.28.1
 APScheduler==3.11.0
+# Round-by-round retraining (round_predictions.py) runs inside the API
+# process, so the ML deps are now part of the server runtime. Keep versions
+# in lockstep with ml/requirements.txt.
+numpy==2.2.*
+scikit-learn==1.7.*

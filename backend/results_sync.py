@@ -34,7 +34,8 @@ from config import (
     FOOTBALL_DATA_COMPETITION,
 )
 from database import SessionLocal
-from models import Match
+from h2h import upsert_h2h
+from models import Match, Team
 
 # recompute_stats lives under scripts/; make it importable from the backend root.
 sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
@@ -70,6 +71,21 @@ API_NAME_ALIASES = {
     "Bosnia-Herzegovina": "Bosnia and Herzegovina",
 }
 
+# football-data.org stage values -> our Match.stage values. Used to reconcile
+# knockout fixtures whose teams are still placeholders (no team pair to match
+# on) by stage + kickoff instead.
+API_STAGE_MAP = {
+    "GROUP_STAGE": "group",
+    "LAST_32": "round32",
+    "ROUND_OF_32": "round32",
+    "LAST_16": "round16",
+    "ROUND_OF_16": "round16",
+    "QUARTER_FINALS": "quarterfinal",
+    "SEMI_FINALS": "semifinal",
+    "THIRD_PLACE": "third_place",
+    "FINAL": "final",
+}
+
 
 def _normalize(name: str) -> str:
     """Lowercase, strip accents, and drop non-alphanumerics for matching."""
@@ -78,10 +94,31 @@ def _normalize(name: str) -> str:
     return "".join(ch for ch in ascii_only.lower() if ch.isalnum())
 
 
-def apply_result(match: Match, score_a: int, score_b: int) -> None:
-    """Write a final score onto a match (does not commit)."""
+# football-data.org score.duration values -> Match.decided_by
+DURATION_MAP = {
+    "REGULAR": "regular",
+    "EXTRA_TIME": "extra_time",
+    "PENALTY_SHOOTOUT": "penalties",
+}
+
+
+def apply_result(
+    match: Match,
+    score_a: int,
+    score_b: int,
+    *,
+    decided_by: str | None = None,
+    penalties: tuple[int, int] | None = None,
+) -> None:
+    """Write a final score onto a match (does not commit).
+
+    score_a/score_b is the full-time score including extra time; penalties is
+    the shootout score (team_a, team_b) when the match went that far.
+    """
     match.actual_score_a = score_a
     match.actual_score_b = score_b
+    match.decided_by = decided_by
+    match.penalty_score_a, match.penalty_score_b = penalties or (None, None)
     match.status = "completed"
 
 
@@ -137,15 +174,9 @@ def fetch_matches_by_ids(
 
 
 def _build_team_index(db) -> dict:
-    """Map normalized team name -> Team for the fixtures' teams."""
-    matches = db.query(Match).options(
-        joinedload(Match.team_a), joinedload(Match.team_b)
-    ).all()
-    index = {}
-    for m in matches:
-        for team in (m.team_a, m.team_b):
-            index[_normalize(team.name)] = team
-    return index
+    """Map normalized team name -> Team for the real (non-placeholder) teams."""
+    teams = db.query(Team).filter(Team.is_placeholder.is_(False)).all()
+    return {_normalize(team.name): team for team in teams}
 
 
 def _resolve_team(api_name: str, index: dict):
@@ -154,24 +185,57 @@ def _resolve_team(api_name: str, index: dict):
     return index.get(_normalize(canonical))
 
 
-def _fixtures_by_pair(db) -> dict:
-    """Map frozenset({team_a_id, team_b_id}) -> list of matches for that pairing."""
-    matches = (
+def _all_fixtures(db) -> list[Match]:
+    return (
         db.query(Match)
         .options(joinedload(Match.team_a), joinedload(Match.team_b))
         .all()
     )
-    by_pair: dict = {}
-    for m in matches:
-        by_pair.setdefault(frozenset({m.team_a_id, m.team_b_id}), []).append(m)
-    return by_pair
 
 
-def _api_kickoff_date(api_match: dict):
+def _api_kickoff(api_match: dict) -> datetime | None:
     raw = api_match.get("utcDate")
     if not raw:
         return None
-    return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(timezone.utc).date()
+    return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(timezone.utc)
+
+
+def _api_kickoff_date(api_match: dict):
+    kickoff = _api_kickoff(api_match)
+    return kickoff.date() if kickoff else None
+
+
+def _kickoff_utc(match: Match) -> datetime:
+    kickoff = match.match_date
+    if kickoff.tzinfo is None:
+        kickoff = kickoff.replace(tzinfo=timezone.utc)
+    return kickoff.astimezone(timezone.utc)
+
+
+def _has_placeholder_team(match: Match) -> bool:
+    return match.team_a.is_placeholder or match.team_b.is_placeholder
+
+
+def _select_by_stage_kickoff(matches: list[Match], api_match: dict):
+    """Pick the fixture an API match refers to by stage + kickoff.
+
+    Used for fixtures still holding placeholder teams, where matching by team
+    pair is impossible. Prefers an exact kickoff-datetime match; falls back to
+    the stage's sole fixture on that calendar day (kickoffs occasionally shift
+    by an hour or two for weather delays).
+    """
+    stage = API_STAGE_MAP.get(api_match.get("stage"))
+    kickoff = _api_kickoff(api_match)
+    if stage is None or kickoff is None:
+        return None
+    candidates = [m for m in matches if m.stage == stage]
+    exact = [m for m in candidates if _kickoff_utc(m) == kickoff]
+    if len(exact) == 1:
+        return exact[0]
+    same_day = [m for m in candidates if _kickoff_utc(m).date() == kickoff.date()]
+    if len(same_day) == 1:
+        return same_day[0]
+    return None
 
 
 def _select_fixture(candidates: list, api_match: dict):
@@ -191,12 +255,28 @@ def _select_fixture(candidates: list, api_match: dict):
     return None
 
 
-def _ensure_external_id_column(db) -> None:
-    """Add Match.external_id to an already-seeded database if it's missing.
+_schema_ensured = False
+
+
+def ensure_schema(db) -> None:
+    """Backfill columns added after a database was seeded.
 
     The app creates tables with Base.metadata.create_all, which never alters an
-    existing table — so this idempotent DDL backfills the new column/index on
-    databases seeded before external_id existed."""
+    existing table — so this idempotent DDL adds columns introduced later
+    (external_id, is_placeholder, decided_by, penalty scores). Runs at app
+    startup (main.py lifespan) so a deploy self-migrates before serving any
+    query that selects the new columns. Postgres-only: other dialects (e.g.
+    SQLite in tests) get the full schema from create_all anyway.
+    """
+    global _schema_ensured
+    if _schema_ensured or db.bind.dialect.name != "postgresql":
+        return
+    db.execute(
+        text(
+            "ALTER TABLE teams ADD COLUMN IF NOT EXISTS "
+            "is_placeholder BOOLEAN NOT NULL DEFAULT FALSE"
+        )
+    )
     db.execute(text("ALTER TABLE matches ADD COLUMN IF NOT EXISTS external_id INTEGER"))
     db.execute(
         text(
@@ -204,7 +284,15 @@ def _ensure_external_id_column(db) -> None:
             "ON matches (external_id)"
         )
     )
+    db.execute(text("ALTER TABLE matches ADD COLUMN IF NOT EXISTS decided_by VARCHAR"))
+    db.execute(
+        text("ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_score_a INTEGER")
+    )
+    db.execute(
+        text("ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_score_b INTEGER")
+    )
     db.commit()
+    _schema_ensured = True
 
 
 # --- step 1: map our fixtures to football-data.org ids ---------------------
@@ -213,36 +301,56 @@ def _ensure_external_id_column(db) -> None:
 def map_external_ids(db=None) -> dict:
     """Populate Match.external_id by reconciling the competition fixture list.
 
-    Returns {fetched, mapped, unchanged, unmatched}. Re-runnable: it re-resolves
-    every fixture and only writes ids that changed.
+    Fixtures with both teams decided are reconciled by team pair (kickoff date
+    disambiguates repeat pairings); fixtures still holding placeholder teams are
+    reconciled by stage + kickoff instead. Returns {fetched, mapped, unchanged,
+    unmatched}. Re-runnable: it re-resolves every fixture and only writes ids
+    that changed.
     """
     owns_session = db is None
     db = db or SessionLocal()
     summary = {"fetched": 0, "mapped": 0, "unchanged": 0, "unmatched": []}
     try:
-        _ensure_external_id_column(db)
+        ensure_schema(db)
         api_matches = fetch_competition_matches()
         summary["fetched"] = len(api_matches)
         team_index = _build_team_index(db)
-        by_pair = _fixtures_by_pair(db)
+
+        fixtures = _all_fixtures(db)
+        by_pair: dict = {}
+        placeholder_fixtures = []
+        for m in fixtures:
+            if _has_placeholder_team(m):
+                placeholder_fixtures.append(m)
+            else:
+                by_pair.setdefault(frozenset({m.team_a_id, m.team_b_id}), []).append(m)
 
         changed = False
         for api_match in api_matches:
             external_id = api_match.get("id")
+            if external_id is None:
+                continue
             home_name = (api_match.get("homeTeam") or {}).get("name")
             away_name = (api_match.get("awayTeam") or {}).get("name")
-            if external_id is None or not home_name or not away_name:
-                continue
 
-            home = _resolve_team(home_name, team_index)
-            away = _resolve_team(away_name, team_index)
-            if home is None or away is None:
-                summary["unmatched"].append(f"{home_name} vs {away_name} (unknown team)")
-                continue
-
-            match = _select_fixture(by_pair.get(frozenset({home.id, away.id}), []), api_match)
+            match = None
+            if home_name and away_name:
+                home = _resolve_team(home_name, team_index)
+                away = _resolve_team(away_name, team_index)
+                if home is None or away is None:
+                    summary["unmatched"].append(f"{home_name} vs {away_name} (unknown team)")
+                    continue
+                match = _select_fixture(
+                    by_pair.get(frozenset({home.id, away.id}), []), api_match
+                )
             if match is None:
-                summary["unmatched"].append(f"{home_name} vs {away_name} (no matching fixture)")
+                # Undecided slots (or a decided pairing we still hold as
+                # placeholders): reconcile by stage + kickoff.
+                match = _select_by_stage_kickoff(placeholder_fixtures, api_match)
+            if match is None:
+                summary["unmatched"].append(
+                    f"{home_name or 'TBD'} vs {away_name or 'TBD'} (no matching fixture)"
+                )
                 continue
 
             if match.external_id == external_id:
@@ -268,21 +376,103 @@ def map_external_ids(db=None) -> dict:
     return summary
 
 
+# --- step 1b: swap placeholder slots for decided teams ----------------------
+
+
+def resolve_knockout_teams(db=None) -> dict:
+    """Replace placeholder teams with the real ones football-data.org reports.
+
+    Looks up mapped fixtures that still hold a placeholder slot, asks the API
+    for them by id, and writes the decided team(s). Newly completed pairings
+    also get an h2h record. Returns {checked, resolved, undecided, unmatched}.
+    """
+    owns_session = db is None
+    db = db or SessionLocal()
+    summary = {"checked": 0, "resolved": 0, "undecided": 0, "unmatched": []}
+    try:
+        pending = [
+            m
+            for m in _all_fixtures(db)
+            if _has_placeholder_team(m) and m.external_id is not None
+        ]
+        summary["checked"] = len(pending)
+        if not pending:
+            return summary
+
+        team_index = _build_team_index(db)
+        by_external = {m.external_id: m for m in pending}
+        api_matches = fetch_matches_by_ids(list(by_external))
+
+        changed = False
+        for api_match in api_matches:
+            match = by_external.get(api_match.get("id"))
+            if match is None:
+                continue
+            home_name = (api_match.get("homeTeam") or {}).get("name")
+            away_name = (api_match.get("awayTeam") or {}).get("name")
+            if not home_name and not away_name:
+                summary["undecided"] += 1
+                continue
+
+            # Our fixtures follow the official bracket's home/away order, so
+            # the feed's home team fills team_a and its away team fills team_b.
+            resolved_any = False
+            for name, side in ((home_name, "team_a"), (away_name, "team_b")):
+                if not name or not getattr(match, side).is_placeholder:
+                    continue
+                team = _resolve_team(name, team_index)
+                if team is None:
+                    summary["unmatched"].append(
+                        f"match {match.match_id}: unknown team {name!r}"
+                    )
+                    continue
+                setattr(match, f"{side}_id", team.id)
+                setattr(match, side, team)
+                resolved_any = True
+                logger.info(
+                    "Resolved match %s %s -> %s", match.match_id, side, team.name
+                )
+            if not resolved_any:
+                summary["undecided"] += 1
+                continue
+
+            changed = True
+            summary["resolved"] += 1
+            if not _has_placeholder_team(match):
+                upsert_h2h(db, match.team_a, match.team_b)
+
+        if changed:
+            db.commit()
+    finally:
+        if owns_session:
+            db.close()
+
+    if summary["unmatched"]:
+        logger.warning(
+            "Could not resolve knockout slots: %s", "; ".join(summary["unmatched"])
+        )
+    return summary
+
+
 # --- step 2: poll the awaiting fixtures by id ------------------------------
 
 
-def _orient_scores(match: Match, home_name: str, home_score: int, away_score: int):
-    """Map the feed's home/away scores onto our team_a/team_b ordering.
+def _home_is_team_a(match: Match, home_name: str) -> bool | None:
+    """Whether the feed's home team is our team_a (drives score orientation).
 
-    Returns (score_a, score_b), or None if the feed's home team matches neither
-    of our teams (shouldn't happen for a mapped fixture, but guards a bad alias).
+    Returns None if the feed's home team matches neither of our teams
+    (shouldn't happen for a mapped fixture, but guards a bad alias).
     """
     canonical_home = _normalize(API_NAME_ALIASES.get(home_name, home_name))
     if canonical_home == _normalize(match.team_a.name):
-        return home_score, away_score
+        return True
     if canonical_home == _normalize(match.team_b.name):
-        return away_score, home_score
+        return False
     return None
+
+
+def _oriented(home_is_a: bool, home_value: int, away_value: int) -> tuple[int, int]:
+    return (home_value, away_value) if home_is_a else (away_value, home_value)
 
 
 def _matches_awaiting_result(db, now: datetime) -> list[Match]:
@@ -312,6 +502,7 @@ def sync_results(db=None, *, recompute: bool = True) -> dict:
     db = db or SessionLocal()
     summary = {"awaiting": 0, "fetched": 0, "updated": 0, "unmatched": [], "unmapped": 0}
     try:
+        ensure_schema(db)
         now = datetime.now(timezone.utc)
         awaiting = _matches_awaiting_result(db, now)
         summary["awaiting"] = len(awaiting)
@@ -348,24 +539,39 @@ def sync_results(db=None, *, recompute: bool = True) -> dict:
             if match is None:
                 continue
 
-            full_time = (api_match.get("score") or {}).get("fullTime") or {}
+            score = api_match.get("score") or {}
+            full_time = score.get("fullTime") or {}
             home_score, away_score = full_time.get("home"), full_time.get("away")
             home_name = (api_match.get("homeTeam") or {}).get("name")
             if home_score is None or away_score is None or not home_name:
                 continue
 
-            oriented = _orient_scores(match, home_name, home_score, away_score)
-            if oriented is None:
+            home_is_a = _home_is_team_a(match, home_name)
+            if home_is_a is None:
                 summary["unmatched"].append(f"external id {api_match.get('id')} ({home_name})")
                 continue
-            score_a, score_b = oriented
+            score_a, score_b = _oriented(home_is_a, home_score, away_score)
 
-            apply_result(match, score_a, score_b)
+            shootout = score.get("penalties") or {}
+            penalties = None
+            if shootout.get("home") is not None and shootout.get("away") is not None:
+                penalties = _oriented(home_is_a, shootout["home"], shootout["away"])
+
+            apply_result(
+                match,
+                score_a,
+                score_b,
+                decided_by=DURATION_MAP.get(score.get("duration")),
+                penalties=penalties,
+            )
+            # Keep the pair's head-to-head current now that they've met again.
+            upsert_h2h(db, match.team_a, match.team_b)
             changed = True
             summary["updated"] += 1
             logger.info(
-                "Recorded match %s: %s %s-%s %s",
+                "Recorded match %s: %s %s-%s %s%s",
                 match.match_id, match.team_a.name, score_a, score_b, match.team_b.name,
+                f" (pens {penalties[0]}-{penalties[1]})" if penalties else "",
             )
 
         if changed:

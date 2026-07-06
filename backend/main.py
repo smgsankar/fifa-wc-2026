@@ -23,22 +23,63 @@ from database import Base, engine, get_db
 logger = logging.getLogger("uvicorn.error")
 
 
-def _run_results_sync() -> None:
-    """Scheduler job: pull finished results, swallowing errors so a bad poll
-    (rate limit, network blip) never crashes the worker thread."""
-    from results_sync import sync_results
+def _run_sync_cycle() -> None:
+    """Scheduler job: map new fixtures, pull finished results, resolve decided
+    knockout slots, then retrain/predict any round that has become due. Errors
+    are swallowed so a bad poll (rate limit, network blip) never crashes the
+    worker thread."""
+    from database import SessionLocal
+    from results_sync import map_external_ids, resolve_knockout_teams, sync_results
 
     try:
+        db = SessionLocal()
+        try:
+            unmapped = (
+                db.query(models.Match).filter(models.Match.external_id.is_(None)).count()
+            )
+        finally:
+            db.close()
+        if unmapped:
+            mapping = map_external_ids()
+            if mapping["mapped"]:
+                logger.info("Mapped %s fixture(s) to external ids", mapping["mapped"])
+
         summary = sync_results()
         if summary["updated"]:
             logger.info("Results sync recorded %s new result(s)", summary["updated"])
+
+        resolved = resolve_knockout_teams()
+        if resolved["resolved"]:
+            logger.info("Resolved teams for %s knockout fixture(s)", resolved["resolved"])
     except Exception:  # noqa: BLE001 — keep the recurring job alive
         logger.exception("Results sync failed")
+
+    # Independent of the poll: rounds can become due from results recorded in
+    # an earlier cycle (or manually), and training needs no API access.
+    try:
+        from round_predictions import run_due_round_predictions
+
+        rounds = run_due_round_predictions()
+        if rounds["predicted"]:
+            logger.info(
+                "Generated %s prediction(s) for round(s): %s",
+                rounds["predicted"], ", ".join(rounds["stages"]),
+            )
+    except Exception:  # noqa: BLE001
+        logger.exception("Round prediction run failed")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+
+    # create_all never alters existing tables; backfill columns added since
+    # the database was seeded before serving any query that selects them.
+    from database import SessionLocal
+    from results_sync import ensure_schema
+
+    with SessionLocal() as db:
+        ensure_schema(db)
 
     scheduler = None
     if RESULTS_SYNC_ENABLED and FOOTBALL_DATA_API_TOKEN:
@@ -46,7 +87,7 @@ async def lifespan(app: FastAPI):
 
         scheduler = BackgroundScheduler(daemon=True)
         scheduler.add_job(
-            _run_results_sync,
+            _run_sync_cycle,
             "interval",
             seconds=RESULTS_SYNC_INTERVAL_SECONDS,
             id="results_sync",
@@ -105,11 +146,17 @@ def match_query(db: Session):
 
 
 # A match is considered live from kickoff until this long after; past the
-# window it is "awaiting_results" until actual scores are uploaded.
-LIVE_WINDOW = timedelta(minutes=120)
+# window it is "awaiting_results" until actual scores are uploaded. Knockout
+# games can go to extra time and penalties (~160+ minutes of wall clock), so
+# they get a wider window than group games.
+GROUP_LIVE_WINDOW = timedelta(minutes=120)
+KNOCKOUT_LIVE_WINDOW = timedelta(minutes=170)
 
-# How many of a team's most recent matches to show as "recent form". Mirrors
-# the value used when preseeding teams.recent_form from historical results.
+
+def live_window_for(stage: str) -> timedelta:
+    return GROUP_LIVE_WINDOW if stage == "group" else KNOCKOUT_LIVE_WINDOW
+
+# How many of a team's most recent matches to show as "recent form".
 RECENT_FORM_SIZE = 5
 
 
@@ -122,7 +169,7 @@ def effective_status(match: models.Match, now: datetime) -> str:
         kickoff = kickoff.replace(tzinfo=timezone.utc)
     if now < kickoff:
         return "pending"
-    if now < kickoff + LIVE_WINDOW:
+    if now < kickoff + live_window_for(match.stage):
         return "live"
     return "awaiting_results"
 
@@ -133,16 +180,20 @@ def upcoming_matches(db: Session, limit: int) -> list[schemas.UpcomingMatch]:
     matches = (
         match_query(db)
         .filter(models.Match.status == "pending")
-        .filter(models.Match.match_date > now - LIVE_WINDOW)
+        .filter(models.Match.match_date > now - KNOCKOUT_LIVE_WINDOW)
         .order_by(models.Match.match_date.asc(), models.Match.match_id.asc())
-        .limit(limit)
         .all()
     )
-    return [
-        schemas.UpcomingMatch.model_validate(m).model_copy(
-            update={"status": effective_status(m, now)}
-        )
+    # Kicked-off matches past their stage's live window are awaiting results,
+    # not upcoming — drop them rather than showing a stale "next match".
+    upcoming = [
+        (m, status)
         for m in matches
+        if (status := effective_status(m, now)) in ("pending", "live")
+    ]
+    return [
+        schemas.UpcomingMatch.model_validate(m).model_copy(update={"status": status})
+        for m, status in upcoming[:limit]
     ]
 
 
@@ -197,9 +248,10 @@ def get_all_matches(
         default=None
     ),
     team_id: int | None = Query(default=None),
-    stage: Literal["group", "round16", "quarterfinal", "semifinal", "final"] | None = Query(
-        default=None
-    ),
+    stage: Literal[
+        "group", "round32", "round16", "quarterfinal", "semifinal", "third_place", "final"
+    ]
+    | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
     query = match_query(db)
@@ -225,6 +277,9 @@ def get_all_matches(
             status=effective_status(m, now),
             actual_score_a=m.actual_score_a,
             actual_score_b=m.actual_score_b,
+            decided_by=m.decided_by,
+            penalty_score_a=m.penalty_score_a,
+            penalty_score_b=m.penalty_score_b,
             prediction=m.prediction,
             prediction_correct=m.prediction.is_correct if m.prediction else None,
         )
@@ -237,13 +292,8 @@ def get_all_matches(
     return {"all_matches": items}
 
 
-def completed_wc_form(db: Session, team: models.Team) -> list[dict]:
-    """A team's completed World Cup fixtures as recent-form entries.
-
-    The stored teams.recent_form is derived once from pre-tournament history, so
-    matches that finish during the World Cup are missing from it. These entries
-    are merged in at read time (see recent_form_for) to keep the form current.
-    """
+def completed_wc_form(db: Session, team: models.Team, before: datetime) -> list[dict]:
+    """A team's World Cup fixtures completed before a cutoff, as form entries."""
     matches = (
         db.query(models.Match)
         .options(
@@ -251,6 +301,7 @@ def completed_wc_form(db: Session, team: models.Team) -> list[dict]:
         )
         .filter(
             models.Match.status == "completed",
+            models.Match.match_date < before,
             or_(
                 models.Match.team_a_id == team.id,
                 models.Match.team_b_id == team.id,
@@ -280,11 +331,45 @@ def completed_wc_form(db: Session, team: models.Team) -> list[dict]:
     return entries
 
 
-def recent_form_for(db: Session, team: models.Team) -> list[dict]:
-    """Most recent matches for a team, newest first, blending completed World
-    Cup fixtures into the pre-tournament form stored on the team."""
-    combined = completed_wc_form(db, team) + list(team.recent_form or [])
-    # ISO date strings sort lexically; World Cup dates are newest and float up.
+def historical_form(db: Session, team: models.Team, before: datetime) -> list[dict]:
+    """Pre-tournament form entries from historical results before a cutoff."""
+    rows = (
+        db.query(models.HistoricalResult)
+        .filter(
+            or_(
+                models.HistoricalResult.home_team == team.name,
+                models.HistoricalResult.away_team == team.name,
+            ),
+            models.HistoricalResult.match_date < before.date(),
+        )
+        .order_by(models.HistoricalResult.match_date.desc())
+        .limit(RECENT_FORM_SIZE)
+        .all()
+    )
+    entries: list[dict] = []
+    for r in rows:
+        is_home = r.home_team == team.name
+        own = r.home_score if is_home else r.away_score
+        opp = r.away_score if is_home else r.home_score
+        entries.append(
+            {
+                "match_date": r.match_date.isoformat(),
+                "opponent": r.away_team if is_home else r.home_team,
+                "result": "W" if own > opp else "L" if own < opp else "D",
+                "score": f"{own}-{opp}",
+            }
+        )
+    return entries
+
+
+def recent_form_for(db: Session, team: models.Team, as_of: datetime) -> list[dict]:
+    """The last matches a team played before as_of, newest first.
+
+    Point-in-time: a match detail page shows each team's form as it stood at
+    that match's kickoff, blending completed World Cup fixtures with the
+    pre-tournament historical results."""
+    combined = completed_wc_form(db, team, as_of) + historical_form(db, team, as_of)
+    # ISO date strings sort lexically; newer dates float up.
     combined.sort(key=lambda e: e["match_date"], reverse=True)
     return combined[:RECENT_FORM_SIZE]
 
@@ -295,15 +380,20 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
     if match is None:
         raise HTTPException(status_code=404, detail=f"Match {match_id} not found")
 
+    kickoff = match.match_date
+    if kickoff.tzinfo is None:
+        kickoff = kickoff.replace(tzinfo=timezone.utc)
+
     def team_detail(team: models.Team) -> schemas.TeamDetail:
         return schemas.TeamDetail(
             id=team.id,
             name=team.name,
             country_code=team.country_code,
             logo_url=team.logo_url,
+            is_placeholder=team.is_placeholder,
             head_coach=team.head_coach,
             squad=team.squad or [],
-            recent_form=recent_form_for(db, team),
+            recent_form=recent_form_for(db, team, kickoff),
         )
 
     detail = schemas.MatchDetail(
@@ -318,6 +408,9 @@ def get_match_detail(match_id: int, db: Session = Depends(get_db)):
         status=effective_status(match, datetime.now(timezone.utc)),
         actual_score_a=match.actual_score_a,
         actual_score_b=match.actual_score_b,
+        decided_by=match.decided_by,
+        penalty_score_a=match.penalty_score_a,
+        penalty_score_b=match.penalty_score_b,
         prediction=match.prediction,
         prediction_correct=match.prediction.is_correct if match.prediction else None,
     )

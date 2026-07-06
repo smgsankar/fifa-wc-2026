@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getAllMatches } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
@@ -11,7 +11,15 @@ import ErrorState from '../components/ui/ErrorState'
 import EmptyState from '../components/ui/EmptyState'
 import { RowsSkeleton } from '../components/ui/Skeleton'
 
-const STAGE_ORDER = ['group', 'round16', 'quarterfinal', 'semifinal', 'final']
+const STAGE_ORDER = [
+  'group',
+  'round32',
+  'round16',
+  'quarterfinal',
+  'semifinal',
+  'third_place',
+  'final',
+]
 
 function applyFilters(matches: MatchListItem[], f: FixtureFilters): MatchListItem[] {
   const result = matches.filter((m) => {
@@ -87,8 +95,9 @@ export default function FixturesPage() {
   const teams = useMemo(() => {
     const byId = new Map<number, Team>()
     for (const m of data ?? []) {
-      byId.set(m.team_a.id, m.team_a)
-      byId.set(m.team_b.id, m.team_b)
+      // Undecided knockout slots ("Winner SF 1") are not filterable teams.
+      if (!m.team_a.is_placeholder) byId.set(m.team_a.id, m.team_a)
+      if (!m.team_b.is_placeholder) byId.set(m.team_b.id, m.team_b)
     }
     return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
   }, [data])
@@ -101,6 +110,25 @@ export default function FixturesPage() {
   }, [data])
 
   const filtered = useMemo(() => (data ? applyFilters([...data], filters) : []), [data, filters])
+
+  /* On first render with data, jump to "now" in the schedule: the most recent
+     match rather than the top of the list. Centering it keeps the boundary
+     visible — last result just played on one side, next kickoff on the other.
+     Runs once; later filter/sort changes don't yank the scroll position. */
+  const autoScrolled = useRef(false)
+  useEffect(() => {
+    if (autoScrolled.current || filtered.length === 0) return
+    autoScrolled.current = true
+    const completed = filtered.filter((m) => m.status === 'completed')
+    if (completed.length === 0) return // nothing played yet — stay at the top
+    const mostRecent = completed.reduce((latest, m) =>
+      new Date(m.match_date) > new Date(latest.match_date) ? m : latest,
+    )
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    document
+      .getElementById(`match-${mostRecent.match_id}`)
+      ?.scrollIntoView({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' })
+  }, [filtered])
 
   /* Group under date headings — both sorts are chronological. */
   const groups = useMemo(() => {

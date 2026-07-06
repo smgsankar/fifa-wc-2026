@@ -1,0 +1,33 @@
+match_no,stage,home_team,away_team,kickoff_utc,stadium,city
+73,round32,South Africa,Canada,2026-06-28T19:00:00,SoFi Stadium,"Inglewood, California"
+74,round32,Brazil,Japan,2026-06-29T17:00:00,NRG Stadium,Houston
+75,round32,Germany,Paraguay,2026-06-29T20:30:00,Gillette Stadium,"Foxborough, Massachusetts"
+76,round32,Netherlands,Morocco,2026-06-30T01:00:00,Estadio BBVA,"Guadalupe, Nuevo León"
+77,round32,Ivory Coast,Norway,2026-06-30T17:00:00,AT&T Stadium,"Arlington, Texas"
+78,round32,France,Sweden,2026-06-30T21:00:00,MetLife Stadium,"East Rutherford, New Jersey"
+79,round32,Mexico,Ecuador,2026-07-01T02:00:00,Estadio Azteca,Mexico City
+80,round32,England,DR Congo,2026-07-01T16:00:00,Mercedes-Benz Stadium,Atlanta
+81,round32,Belgium,Senegal,2026-07-01T20:00:00,Lumen Field,Seattle
+82,round32,United States,Bosnia and Herzegovina,2026-07-02T00:00:00,Levi's Stadium,"Santa Clara, California"
+83,round32,Spain,Austria,2026-07-02T19:00:00,SoFi Stadium,"Inglewood, California"
+84,round32,Portugal,Croatia,2026-07-02T23:00:00,BMO Field,Toronto
+85,round32,Switzerland,Algeria,2026-07-03T03:00:00,BC Place,Vancouver
+86,round32,Australia,Egypt,2026-07-03T18:00:00,AT&T Stadium,"Arlington, Texas"
+87,round32,Argentina,Cape Verde,2026-07-03T22:00:00,Hard Rock Stadium,"Miami Gardens, Florida"
+88,round32,Colombia,Ghana,2026-07-04T01:30:00,Arrowhead Stadium,"Kansas City, Missouri"
+89,round16,Canada,Morocco,2026-07-04T17:00:00,NRG Stadium,Houston
+90,round16,Paraguay,France,2026-07-04T21:00:00,Lincoln Financial Field,Philadelphia
+91,round16,Brazil,Norway,2026-07-05T20:00:00,MetLife Stadium,"East Rutherford, New Jersey"
+92,round16,Mexico,England,2026-07-06T01:00:00,Estadio Azteca,Mexico City
+93,round16,Portugal,Spain,2026-07-06T19:00:00,AT&T Stadium,"Arlington, Texas"
+94,round16,United States,Belgium,2026-07-07T00:00:00,Lumen Field,Seattle
+95,round16,Argentina,Egypt,2026-07-07T16:00:00,Mercedes-Benz Stadium,Atlanta
+96,round16,Switzerland,Colombia,2026-07-07T20:00:00,BC Place,Vancouver
+97,quarterfinal,France,Morocco,2026-07-09T20:00:00,Gillette Stadium,"Foxborough, Massachusetts"
+98,quarterfinal,W93,W94,2026-07-10T19:00:00,SoFi Stadium,"Inglewood, California"
+99,quarterfinal,Norway,England,2026-07-11T21:00:00,Hard Rock Stadium,"Miami Gardens, Florida"
+100,quarterfinal,W95,W96,2026-07-12T01:00:00,Arrowhead Stadium,"Kansas City, Missouri"
+101,semifinal,WQF1,WQF2,2026-07-14T19:00:00,AT&T Stadium,"Arlington, Texas"
+102,semifinal,WQF3,WQF4,2026-07-15T19:00:00,Mercedes-Benz Stadium,Atlanta
+103,third_place,LSF1,LSF2,2026-07-18T21:00:00,Hard Rock Stadium,"Miami Gardens, Florida"
+104,final,WSF1,WSF2,2026-07-19T19:00:00,MetLife Stadium,"East Rutherford, New Jersey"

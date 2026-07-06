@@ -3,6 +3,8 @@ export interface Team {
   name: string
   country_code: string
   logo_url: string | null
+  /** Undecided knockout slot (e.g. "Winner SF 1") standing in for a real team. */
+  is_placeholder?: boolean
 }
 
 export interface SquadPlayer {
@@ -61,9 +63,16 @@ export interface MatchSummary {
   prediction: Prediction | null
 }
 
+/** How a completed match was decided; null when unknown (pre-existing data). */
+export type DecidedBy = 'regular' | 'extra_time' | 'penalties'
+
 export interface MatchListItem extends MatchSummary {
   actual_score_a: number | null
   actual_score_b: number | null
+  /** actual_score_* includes extra time; a shootout's score is penalty_score_*. */
+  decided_by: DecidedBy | null
+  penalty_score_a: number | null
+  penalty_score_b: number | null
   prediction_correct: boolean | null
 }
 

@@ -1,10 +1,12 @@
 # FIFA World Cup 2026 Predictor
 
-A full-stack app that predicts World Cup 2026 group-stage results and tracks
-how the model performs as real results come in. The dashboard shows the next
-match with a live countdown and win probabilities, the full fixture list with
-filters, per-match detail (head-to-head, recent form, squads), and global
-model accuracy stats.
+A full-stack app that predicts World Cup 2026 results — the group stage up
+front and each knockout round as it becomes due — and tracks how the model
+performs as real results come in. The dashboard shows the next match with a
+live countdown and win probabilities, the full fixture list with filters
+(undecided knockout slots appear as placeholders like *Winner SF 1*),
+per-match detail (head-to-head, recent form, squads), and global model
+accuracy stats.
 
 ## Repository layout
 
@@ -12,7 +14,7 @@ model accuracy stats.
 |---|---|---|
 | [`frontend/`](frontend/) | Vite + React 19 + Tailwind v4 dashboard, deployed to Cloudflare Pages | [frontend/README.md](frontend/README.md) |
 | [`backend/`](backend/) | FastAPI + SQLAlchemy + PostgreSQL REST API, deployed to Railway | [backend/README.md](backend/README.md) |
-| [`backend/ml/`](backend/ml/) | Logistic-regression model that generates the 72 fixture predictions | [backend/mlprd.md](backend/mlprd.md) |
+| [`backend/ml/`](backend/ml/) | Logistic-regression model behind the pre-tournament group predictions and the per-round knockout retraining | [backend/mlprd.md](backend/mlprd.md) |
 | [`backend/seed_data/`](backend/seed_data/) | Checked-in source data (Kaggle history, FIFA schedule, squads, predictions) | [backend/seed_data/README.md](backend/seed_data/README.md) |
 
 Product specs live in `frontend/prd.md` and `backend/prd.md`.
@@ -28,9 +30,10 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # adjust DATABASE_URL if needed
 createdb wc2026
-python scripts/preseed_kaggle.py    # teams, fixtures, history, h2h, form
+python scripts/preseed_kaggle.py    # teams, group fixtures, history, h2h, form
 python scripts/seed_squads.py       # squads + head coaches
-python scripts/seed_predictions.py  # model predictions
+python scripts/seed_predictions.py  # group-stage model predictions
+python scripts/seed_knockouts.py    # knockout fixtures + placeholder teams
 cd ..
 
 # Frontend (one-time setup)
@@ -62,7 +65,9 @@ Or automate it: with a free [football-data.org](https://www.football-data.org/)
 token, the backend can poll for finished scores and record them itself — map
 fixtures to the API once with `python scripts/map_external_ids.py`, then run
 `python scripts/sync_results.py` (or set `RESULTS_SYNC_ENABLED=true` to have the
-API poll on an interval). See
+API poll on an interval). The same cycle also fills in knockout pairings as
+they're decided and retrains the model after each completed round to predict
+the next one. See
 [backend/README.md](backend/README.md#automated-results-sync-football-dataorg).
 
 ## Deployment
