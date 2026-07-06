@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import MatchDetailPage from './pages/MatchDetailPage'
 import FixturesPage from './pages/FixturesPage'
+import BracketPage from './pages/BracketPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function ScrollToTop() {
@@ -23,6 +24,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="matches/:matchId" element={<MatchDetailPage />} />
           <Route path="fixtures" element={<FixturesPage />} />
+          <Route path="bracket" element={<BracketPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

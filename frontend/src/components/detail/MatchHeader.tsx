@@ -28,11 +28,25 @@ export default function MatchHeader({ match }: { match: MatchDetail }) {
           </div>
 
           {completed && hasScore ? (
-            <p className="flex h-16 items-center font-mono text-5xl font-bold tabular-nums sm:h-20 sm:text-6xl">
-              {match.actual_score_a}
-              <span className="mx-1 text-ink/30 sm:mx-2 dark:text-stone-100/30">–</span>
-              {match.actual_score_b}
-            </p>
+            <div className="flex h-16 flex-col items-center justify-center sm:h-20">
+              <p className="flex items-center font-mono text-5xl font-bold tabular-nums sm:text-6xl">
+                {match.actual_score_a}
+                <span className="mx-1 text-ink/30 sm:mx-2 dark:text-stone-100/30">–</span>
+                {match.actual_score_b}
+              </p>
+              {match.decided_by === 'penalties' && (
+                <p className="mt-1 text-[0.65rem] tracking-wide whitespace-nowrap text-ink/50 dark:text-stone-100/50">
+                  {match.penalty_score_a !== null
+                    ? `Penalties ${match.penalty_score_a}–${match.penalty_score_b}`
+                    : 'Decided on penalties'}
+                </p>
+              )}
+              {match.decided_by === 'extra_time' && (
+                <p className="mt-1 text-[0.65rem] tracking-wide whitespace-nowrap text-ink/50 dark:text-stone-100/50">
+                  After extra time
+                </p>
+              )}
+            </div>
           ) : (
             <p className="flex h-16 items-center font-display text-sm font-black tracking-[0.3em] uppercase text-ink/30 sm:h-20 dark:text-stone-100/30">
               VS

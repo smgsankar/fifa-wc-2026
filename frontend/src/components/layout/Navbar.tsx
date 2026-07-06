@@ -27,6 +27,9 @@ export default function Navbar() {
           <NavLink to="/fixtures" className={linkClass}>
             Schedule
           </NavLink>
+          <NavLink to="/bracket" className={linkClass}>
+            Bracket
+          </NavLink>
           <ThemeToggle />
         </nav>
       </div>

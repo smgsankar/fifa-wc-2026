@@ -18,6 +18,7 @@ from recompute_stats import recompute_stats
 from sqlalchemy.orm import joinedload
 
 from database import Base, SessionLocal, engine
+from h2h import upsert_h2h
 from models import Match
 from results_sync import apply_result
 
@@ -114,6 +115,7 @@ def record_one(db, match: Match) -> bool:
         return False
 
     apply_result(match, score_a, score_b)
+    upsert_h2h(db, match.team_a, match.team_b)
     db.commit()
     print(f"Saved: {match.team_a.name} {score_a}-{score_b} {match.team_b.name}")
     return True
